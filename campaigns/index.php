@@ -1865,6 +1865,8 @@ function replyRate($contacted, $replies): float
                 id="newCampaignForm"
             >
 
+                <?= csrf_field() ?>
+
                 <div class="modal-body">
 
 
