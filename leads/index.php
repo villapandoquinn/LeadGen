@@ -251,6 +251,7 @@ document.querySelectorAll('.lead-status-select').forEach(sel => {
     const fd = new FormData();
     fd.append('id', leadId);
     fd.append('status', newStatus);
+    fd.append('csrf_token', '<?= csrf_token() ?>');
 
     fetch('update-status.php', { method: 'POST', body: fd })
       .then(res => res.json())
