@@ -1,0 +1,12 @@
+{
+    "workspace_name": "Primovative Co.",
+    "support_email": "support@primovative.com",
+    "timezone": "America\/New_York",
+    "daily_limit": 500,
+    "enable_tracking": true,
+    "sender_name": "Primovative Team",
+    "smtp_host": "smtp.sendgrid.net",
+    "smtp_port": 587,
+    "google_maps_api_key": "AIzaSyCjhVgMLeF_HuLtMLpJqstAibDRwtP6KTQ",
+    "updated_at": "2026-11-01 11:21:43"
+}

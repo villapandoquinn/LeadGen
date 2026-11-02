@@ -1,0 +1,58 @@
+<?php
+require_once __DIR__ . '/../includes/auth_check.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.php');
+    exit;
+}
+
+require_csrf();
+
+if (!$workspaceService->hasPermission($workspaceRole, 'manage_workspace')) {
+    header('Location: index.php?error=unauthorized');
+    exit;
+}
+
+$workspaceName = trim($_POST['workspace_name'] ?? 'Primovative Co.');
+$supportEmail = trim($_POST['support_email'] ?? 'support@primovative.com');
+$timezone = trim($_POST['timezone'] ?? 'America/New_York');
+$dailyLimit = (int)($_POST['daily_limit'] ?? 500);
+$enableTracking = !empty($_POST['enable_tracking']);
+$senderName = trim($_POST['sender_name'] ?? 'Primovative Team');
+$smtpHost = trim($_POST['smtp_host'] ?? '');
+$smtpPort = (int)($_POST['smtp_port'] ?? 587);
+$googleApiKey = trim($_POST['google_maps_api_key'] ?? '');
+
+$settingsFile = __DIR__ . '/../config/settings.json';
+$current = [];
+if (file_exists($settingsFile)) {
+    $current = json_decode(file_get_contents($settingsFile), true) ?: [];
+}
+
+$payload = [
+    'workspace_name' => $workspaceName,
+    'support_email' => $supportEmail,
+    'timezone' => $timezone,
+    'daily_limit' => $dailyLimit,
+    'enable_tracking' => $enableTracking,
+    'sender_name' => $senderName,
+    'smtp_host' => $smtpHost,
+    'smtp_port' => $smtpPort,
+    'google_maps_api_key' => $googleApiKey ?: ($current['google_maps_api_key'] ?? ''),
+    'updated_at' => date('Y-m-d H:i:s')
+];
+
+// 1. Update current workspace in database
+try {
+    $uWs = $pdo->prepare("UPDATE workspaces SET name = ?, settings = ? WHERE id = ?");
+    $uWs->execute([$workspaceName, json_encode($payload), $currentWorkspaceId]);
+} catch (Throwable $e) {
+    error_log("Failed to update workspace settings: " . $e->getMessage());
+}
+
+// 2. Update config/settings.json
+file_put_contents($settingsFile, json_encode(array_merge($current, $payload), JSON_PRETTY_PRINT));
+
+header('Location: index.php?success=saved');
+exit;
+
