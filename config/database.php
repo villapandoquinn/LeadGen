@@ -1,9 +1,9 @@
 <?php
 
 $host = "localhost";
-$dbname = "db_lead_generation";
+$dbname = "u312616473_leadgeneration";
 $username = "root";
-$password = "";
+$password = "L3ADGeN@2025";
 
 try {
 
