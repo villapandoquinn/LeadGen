@@ -2,7 +2,7 @@
 
 $host = "localhost";
 $dbname = "u312616473_leadgeneration";
-$username = "root";
+$username = "u312616473_leadgeneration";
 $password = "L3ADGeN@2025";
 
 try {
