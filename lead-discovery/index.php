@@ -1,13 +1,23 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
 require_once __DIR__ . '/../services/GooglePlacesService.php';
+require_once __DIR__ . '/../services/FacebookMetaService.php';
 
 $pageEyebrow = 'Lead Generation';
 $pageTitle = 'Lead Discovery';
 $activePage = 'lead-discovery';
 
+$sourceSource = trim($_GET['source'] ?? 'google');
+if (!in_array($sourceSource, ['google', 'facebook'])) {
+    $sourceSource = 'google';
+}
+
 $placesService = new GooglePlacesService();
-$isApiConfigured = $placesService->isConfigured();
+$metaService = new FacebookMetaService();
+$isGoogleConfigured = $placesService->isConfigured();
+$isMetaConfigured = $metaService->isConfigured();
+
+$isApiConfigured = ($sourceSource === 'facebook') ? $isMetaConfigured : $isGoogleConfigured;
 
 $campaignId = isset($_GET['campaign_id']) ? (int)$_GET['campaign_id'] : 0;
 $industryQuery = trim($_GET['industry'] ?? '');
@@ -44,31 +54,47 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
     $fullQuery = trim("{$industryQuery} {$keywordsQuery} in {$locationQuery}");
     if (empty($fullQuery)) $fullQuery = 'businesses';
 
-    $searchResp = $placesService->searchPlaces($fullQuery, [
-        'min_rating' => $minRating,
-        'limit' => 20,
-        'page_token' => $pageToken
-    ]);
+    if ($sourceSource === 'facebook') {
+        $searchResp = $metaService->searchPages($fullQuery, [
+            'limit' => 20
+        ]);
+    } else {
+        $searchResp = $placesService->searchPlaces($fullQuery, [
+            'min_rating' => $minRating,
+            'limit' => 20,
+            'page_token' => $pageToken
+        ]);
+    }
 
     if (!empty($searchResp['success'])) {
         $prospects = $searchResp['results'] ?? [];
         $returnedPageToken = $searchResp['next_page_token'] ?? null;
 
-        // Workspace-scoped duplicate detection
-        $placesService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
+        if ($sourceSource === 'facebook') {
+            $metaService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
+            $incKws = array_filter(array_map('trim', explode(',', $keywordsQuery)));
+            $exKws = array_filter(array_map('trim', explode(',', $excludeKeywordsQuery)));
+            $metaService->qualifyProspects($prospects, $incKws, $exKws, $industryQuery);
 
-        // Intelligent qualification engine
-        $incKws = array_filter(array_map('trim', explode(',', $keywordsQuery)));
-        $exKws = array_filter(array_map('trim', explode(',', $excludeKeywordsQuery)));
-        $placesService->qualifyProspects($prospects, $incKws, $exKws, $industryQuery);
+            if ($relevanceFilter !== '') {
+                $prospects = array_values(array_filter($prospects, fn($p) => ($p['qualification'] ?? '') === $relevanceFilter));
+            }
 
-        if ($relevanceFilter !== '') {
-            $prospects = array_values(array_filter($prospects, fn($p) => ($p['qualification'] ?? '') === $relevanceFilter));
+            $metaService->logDiscovery($pdo, $currentWorkspaceId, $campaignId ?: null, $userId, $fullQuery, count($prospects));
+        } else {
+            $placesService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
+            $incKws = array_filter(array_map('trim', explode(',', $keywordsQuery)));
+            $exKws = array_filter(array_map('trim', explode(',', $excludeKeywordsQuery)));
+            $placesService->qualifyProspects($prospects, $incKws, $exKws, $industryQuery);
+
+            if ($relevanceFilter !== '') {
+                $prospects = array_values(array_filter($prospects, fn($p) => ($p['qualification'] ?? '') === $relevanceFilter));
+            }
+
+            $placesService->logDiscovery($pdo, $currentWorkspaceId, $campaignId ?: null, $userId, $fullQuery, count($prospects));
         }
-
-        $placesService->logDiscovery($pdo, $currentWorkspaceId, $campaignId ?: null, $userId, $fullQuery, count($prospects));
     } else {
-        $apiError = $searchResp['message'] ?? 'Unable to retrieve businesses from Google Maps API.';
+        $apiError = $searchResp['message'] ?? 'Unable to retrieve businesses from API.';
     }
 }
 ?>
@@ -89,21 +115,40 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
   <div class="main-area">
     <?php require_once __DIR__ . '/../includes/topbar.php'; ?>
     <main class="content">
-      <!-- GOOGLE API CONFIGURATION NOTICE (if not configured) -->
+      <!-- SOURCE SELECTOR TABS -->
+      <ul class="nav nav-pills mb-4 gap-2">
+        <li class="nav-item">
+          <a class="nav-link <?= $sourceSource === 'google' ? 'active' : '' ?>" href="index.php?source=google<?= $campaignId ? '&campaign_id='.$campaignId : '' ?>">
+            <i class="bi bi-geo-alt-fill me-1"></i> Google Maps Platform
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <?= $sourceSource === 'facebook' ? 'active' : '' ?>" href="index.php?source=facebook<?= $campaignId ? '&campaign_id='.$campaignId : '' ?>">
+            <i class="bi bi-facebook me-1"></i> Facebook Meta API
+          </a>
+        </li>
+      </ul>
+
+
+      <!-- API CONFIGURATION NOTICE (if not configured) -->
       <?php if (!$isApiConfigured): ?>
         <div class="card border-warning bg-warning-subtle mb-4 shadow-sm">
           <div class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <div>
               <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="bi bi-geo-alt-fill text-danger fs-4"></i>
-                <h2 class="h6 fw-bold text-dark mb-0">Google Maps / Places API Key Required</h2>
+                <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : 'bi-geo-alt-fill text-danger' ?> fs-4"></i>
+                <h2 class="h6 fw-bold text-dark mb-0">
+                  <?= $sourceSource === 'facebook' ? 'Facebook Meta Access Token Required' : 'Google Maps / Places API Key Required' ?>
+                </h2>
               </div>
               <p class="text-dark small mb-0" style="max-width: 680px;">
-                Lead Discovery connects dynamically to official Google Maps Platform APIs (Google Places API New) to find real, verified businesses with live phone numbers, addresses, ratings, and websites. Please configure your API key in Settings to activate live discovery.
+                <?= $sourceSource === 'facebook' 
+                    ? 'Lead Discovery connects dynamically to Facebook Graph API Pages Search to find targeted business pages with live details. Please configure your Facebook Access Token in Settings.'
+                    : 'Lead Discovery connects dynamically to official Google Maps Platform APIs (Google Places API New) to find real, verified businesses. Please configure your API key in Settings.' ?>
               </p>
             </div>
-            <a href="../settings/index.php#google-api" class="btn btn-warning text-dark fw-bold text-nowrap">
-              <i class="bi bi-gear-fill me-1"></i> Configure Google API
+            <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : 'google-api' ?>" class="btn btn-warning text-dark fw-bold text-nowrap">
+              <i class="bi bi-gear-fill me-1"></i> Configure <?= $sourceSource === 'facebook' ? 'Meta API' : 'Google API' ?>
             </a>
           </div>
         </div>
@@ -114,8 +159,8 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
           <div class="d-flex align-items-start gap-2">
             <i class="bi bi-exclamation-octagon-fill fs-5 text-danger"></i>
             <div>
-              <strong>Google Places API Error:</strong> <?= htmlspecialchars($apiError) ?>
-              <div class="mt-1 text-muted">Verify your API key in <a href="../settings/index.php#google-api" class="alert-link">Settings</a> and ensure "Places API (New)" is enabled in your Google Cloud Console.</div>
+              <strong>API Error:</strong> <?= htmlspecialchars($apiError) ?>
+              <div class="mt-1 text-muted">Verify your credentials in <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : 'google-api' ?>" class="alert-link">Settings</a>.</div>
             </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -126,16 +171,21 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
       <div class="discovery-search-card">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
           <div>
-            <h2 class="h5 fw-bold mb-1">Google Maps Business Discovery</h2>
-            <p class="text-muted small mb-0">Search and qualify real businesses directly via Google Places API.</p>
+            <h2 class="h5 fw-bold mb-1">
+              <?= $sourceSource === 'facebook' ? 'Facebook Meta Business Discovery' : 'Google Maps Business Discovery' ?>
+            </h2>
+            <p class="text-muted small mb-0">
+              <?= $sourceSource === 'facebook' ? 'Search and qualify business pages directly via Facebook Graph API.' : 'Search and qualify real businesses directly via Google Places API.' ?>
+            </p>
           </div>
           <div class="google-attribution">
-            <i class="bi bi-google text-primary"></i>
-            <span>Powered by Google Maps Platform</span>
+            <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : 'bi-google text-primary' ?>"></i>
+            <span><?= $sourceSource === 'facebook' ? 'Powered by Facebook Graph API' : 'Powered by Google Maps Platform' ?></span>
           </div>
         </div>
 
         <form method="GET" action="index.php" id="discoveryForm">
+          <input type="hidden" name="source" value="<?= htmlspecialchars($sourceSource) ?>">
           <div class="row g-3">
             <div class="col-md-3">
               <label class="form-label small fw-semibold">Assign to Campaign</label>

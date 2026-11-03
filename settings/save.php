@@ -22,6 +22,7 @@ $senderName = trim($_POST['sender_name'] ?? 'Primovative Team');
 $smtpHost = trim($_POST['smtp_host'] ?? '');
 $smtpPort = (int)($_POST['smtp_port'] ?? 587);
 $googleApiKey = trim($_POST['google_maps_api_key'] ?? '');
+$facebookAccessToken = trim($_POST['facebook_access_token'] ?? '');
 
 $settingsFile = __DIR__ . '/../config/settings.json';
 $current = [];
@@ -39,6 +40,7 @@ $payload = [
     'smtp_host' => $smtpHost,
     'smtp_port' => $smtpPort,
     'google_maps_api_key' => $googleApiKey ?: ($current['google_maps_api_key'] ?? ''),
+    'facebook_access_token' => $facebookAccessToken ?: ($current['facebook_access_token'] ?? ''),
     'updated_at' => date('Y-m-d H:i:s')
 ];
 

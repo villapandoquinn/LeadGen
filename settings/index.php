@@ -115,6 +115,37 @@ $isSuccess = isset($_GET['success']);
                 </div>
               </div>
 
+              <h3 class=\"h6 fw-bold mb-3 border-bottom pb-2 mt-4\" id=\"facebook-api\">
+                <i class=\"bi bi-facebook text-primary me-1\"></i> Facebook Meta API Integration
+              </h3>
+              <div class=\"row g-3 mb-4\">
+                <div class=\"col-12\">
+                  <div class=\"d-flex align-items-center justify-content-between mb-2\">
+                    <label class=\"form-label small fw-semibold mb-0\">Facebook Meta Access Token</label>
+                    <?php if (!empty($settings['facebook_access_token'])): ?>
+                      <span class=\"badge bg-success-subtle text-success border border-success-subtle\"><i class=\"bi bi-check-circle me-1\"></i> Token Configured</span>
+                    <?php else: ?>
+                      <span class=\"badge bg-warning-subtle text-dark border border-warning-subtle\"><i class=\"bi bi-exclamation-triangle me-1\"></i> Not Configured</span>
+                    <?php endif; ?>
+                  </div>
+                  <div class=\"input-group\">
+                    <span class=\"input-group-text bg-white\"><i class=\"bi bi-key text-muted\"></i></span>
+                    <input type=\"password\" id=\"fbTokenInput\" name=\"facebook_access_token\" class=\"form-control font-monospace\" value=\"<?= htmlspecialchars($settings['facebook_access_token'] ?? '') ?>\" placeholder=\"EAAB...\">
+                    <button class=\"btn btn-outline-secondary\" type=\"button\" id=\"toggleFbTokenVisibility\" title=\"Toggle Visibility\">
+                      <i class=\"bi bi-eye\"></i>
+                    </button>
+                    <button class=\"btn btn-outline-primary\" type=\"button\" id=\"testFbTokenBtn\">
+                      <i class=\"bi bi-broadcast me-1\"></i> Test Token
+                    </button>
+                  </div>
+                  <div id=\"testFbFeedback\" class=\"small mt-2\" style=\"display: none;\"></div>
+                  <div class=\"small text-muted mt-2\">
+                    <i class=\"bi bi-info-circle me-1\"></i> Used by <strong>Lead Discovery</strong> to discover targeted business leads via Facebook Graph API Pages Search. Stored securely server-side.
+                  </div>
+                </div>
+              </div>
+
+
               <h3 class="h6 fw-bold mb-3 border-bottom pb-2" id="google-api">
                 <i class="bi bi-geo-alt-fill text-danger me-1"></i> Google Maps &amp; Places API Integration
               </h3>
@@ -210,6 +241,61 @@ if (testBtn && apiKeyInput) {
     });
   });
 }
+const fbTokenInput = document.getElementById('fbTokenInput');
+const toggleFbBtn = document.getElementById('toggleFbTokenVisibility');
+const testFbBtn = document.getElementById('testFbTokenBtn');
+const feedbackFb = document.getElementById('testFbFeedback');
+
+if (toggleFbBtn && fbTokenInput) {
+  toggleFbBtn.addEventListener('click', function() {
+    const isPassword = fbTokenInput.type === 'password';
+    fbTokenInput.type = isPassword ? 'text' : 'password';
+    this.innerHTML = isPassword ? '<i class=\"bi bi-eye-slash\"></i>' : '<i class=\"bi bi-eye\"></i>';
+  });
+}
+
+if (testFbBtn && fbTokenInput) {
+  testFbBtn.addEventListener('click', function() {
+    const token = fbTokenInput.value.trim();
+    if (!token) {
+      feedbackFb.style.display = 'block';
+      feedbackFb.className = 'small mt-2 text-danger';
+      feedbackFb.innerHTML = '<i class=\"bi bi-exclamation-circle me-1\"></i> Please paste a Facebook access token to test.';
+      return;
+    }
+    const origHtml = testFbBtn.innerHTML;
+    testFbBtn.disabled = true;
+    testFbBtn.innerHTML = '<span class=\"spinner-border spinner-border-sm me-1\"></span> Testing...';
+    feedbackFb.style.display = 'none';
+
+    fetch('test-facebook-api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'access_token=' + encodeURIComponent(token)
+    })
+    .then(r => r.json())
+    .then(data => {
+      feedbackFb.style.display = 'block';
+      if (data.success) {
+        feedbackFb.className = 'small mt-2 text-success fw-semibold';
+        feedbackFb.innerHTML = '<i class=\"bi bi-check-circle me-1\"></i> ' + data.message;
+      } else {
+        feedbackFb.className = 'small mt-2 text-danger fw-semibold';
+        feedbackFb.innerHTML = '<i class=\"bi bi-x-circle me-1\"></i> ' + data.message;
+      }
+    })
+    .catch(err => {
+      feedbackFb.style.display = 'block';
+      feedbackFb.className = 'small mt-2 text-danger';
+      feedbackFb.innerHTML = '<i class=\"bi bi-exclamation-triangle me-1\"></i> Server communication error.';
+    })
+    .finally(() => {
+      testFbBtn.disabled = false;
+      testFbBtn.innerHTML = origHtml;
+    });
+  });
+}
+
 </script>
 </body>
 </html>

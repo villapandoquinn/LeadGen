@@ -79,6 +79,11 @@ if (!file_exists($autoload)) {
 
 require_once $autoload;
 
+$aliasesFile = __DIR__ . '/vendor/google/apiclient/src/aliases.php';
+if (file_exists($aliasesFile)) {
+    require_once $aliasesFile;
+}
+
 
 /*
 |--------------------------------------------------------------------------
