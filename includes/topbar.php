@@ -93,7 +93,7 @@ $pageTitle = $pageTitle ?? 'Dashboard';
     <div class="dropdown">
       <button class="topbar-user-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         <?php if (!empty($userPicUrl)): ?>
-          <img src="<?= htmlspecialchars($userPicUrl) ?>" alt="Avatar" class="topbar-user-avatar">
+          <img src="<?= htmlspecialchars($userPicUrl) ?>" alt="Avatar" class="topbar-user-avatar" onerror="this.onerror=null; this.outerHTML='<span class=\'topbar-user-initials\'>' + '<?= htmlspecialchars($initials) ?>' + '</span>';">
         <?php else: ?>
           <span class="topbar-user-initials"><?= htmlspecialchars($initials) ?></span>
         <?php endif; ?>

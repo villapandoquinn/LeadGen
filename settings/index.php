@@ -115,33 +115,27 @@ $isSuccess = isset($_GET['success']);
                 </div>
               </div>
 
-              <h3 class=\"h6 fw-bold mb-3 border-bottom pb-2 mt-4\" id=\"facebook-api\">
-                <i class=\"bi bi-facebook text-primary me-1\"></i> Facebook Meta API Integration
+              <h3 class=\"h6 fw-bold mb-3 border-bottom pb-2 mt-4\" id=\"linkedin-api\">
+                <i class=\"bi bi-linkedin text-primary me-1\"></i> LinkedIn Lead Generation API Integration
               </h3>
               <div class=\"row g-3 mb-4\">
+                <div class=\"col-md-6\">
+                  <label class=\"form-label small fw-semibold\">LinkedIn Client ID</label>
+                  <input type=\"text\" name=\"linkedin_client_id\" class=\"form-control\" value=\"<?= htmlspecialchars($settings['linkedin_client_id'] ?? '') ?>\" placeholder=\"Client ID\">
+                </div>
+                <div class=\"col-md-6\">
+                  <label class=\"form-label small fw-semibold\">LinkedIn Client Secret</label>
+                  <input type=\"password\" name=\"linkedin_client_secret\" class=\"form-control\" value=\"<?= htmlspecialchars($settings['linkedin_client_secret'] ?? '') ?>\" placeholder=\"Client Secret\">
+                </div>
                 <div class=\"col-12\">
-                  <div class=\"d-flex align-items-center justify-content-between mb-2\">
-                    <label class=\"form-label small fw-semibold mb-0\">Facebook Meta Access Token</label>
-                    <?php if (!empty($settings['facebook_access_token'])): ?>
-                      <span class=\"badge bg-success-subtle text-success border border-success-subtle\"><i class=\"bi bi-check-circle me-1\"></i> Token Configured</span>
-                    <?php else: ?>
-                      <span class=\"badge bg-warning-subtle text-dark border border-warning-subtle\"><i class=\"bi bi-exclamation-triangle me-1\"></i> Not Configured</span>
-                    <?php endif; ?>
-                  </div>
+                  <label class=\"form-label small fw-semibold\">LinkedIn Access Token</label>
                   <div class=\"input-group\">
-                    <span class=\"input-group-text bg-white\"><i class=\"bi bi-key text-muted\"></i></span>
-                    <input type=\"password\" id=\"fbTokenInput\" name=\"facebook_access_token\" class=\"form-control font-monospace\" value=\"<?= htmlspecialchars($settings['facebook_access_token'] ?? '') ?>\" placeholder=\"EAAB...\">
-                    <button class=\"btn btn-outline-secondary\" type=\"button\" id=\"toggleFbTokenVisibility\" title=\"Toggle Visibility\">
-                      <i class=\"bi bi-eye\"></i>
-                    </button>
-                    <button class=\"btn btn-outline-primary\" type=\"button\" id=\"testFbTokenBtn\">
-                      <i class=\"bi bi-broadcast me-1\"></i> Test Token
+                    <input type=\"password\" id=\"liTokenInput\" name=\"linkedin_access_token\" class=\"form-control font-monospace\" value=\"<?= htmlspecialchars($settings['linkedin_access_token'] ?? '') ?>\" placeholder=\"AQV...\">
+                    <button class=\"btn btn-outline-primary\" type=\"button\" id=\"testLiTokenBtn\">
+                      <i class=\"bi bi-broadcast me-1\"></i> Test Connection
                     </button>
                   </div>
-                  <div id=\"testFbFeedback\" class=\"small mt-2\" style=\"display: none;\"></div>
-                  <div class=\"small text-muted mt-2\">
-                    <i class=\"bi bi-info-circle me-1\"></i> Used by <strong>Lead Discovery</strong> to discover targeted business leads via Facebook Graph API Pages Search. Stored securely server-side.
-                  </div>
+                  <div id=\"testLiFeedback\" class=\"small mt-2\" style=\"display: none;\"></div>
                 </div>
               </div>
 
@@ -241,57 +235,42 @@ if (testBtn && apiKeyInput) {
     });
   });
 }
-const fbTokenInput = document.getElementById('fbTokenInput');
-const toggleFbBtn = document.getElementById('toggleFbTokenVisibility');
-const testFbBtn = document.getElementById('testFbTokenBtn');
-const feedbackFb = document.getElementById('testFbFeedback');
+const liTokenInput = document.getElementById('liTokenInput');
+const testLiBtn = document.getElementById('testLiTokenBtn');
+const feedbackLi = document.getElementById('testLiFeedback');
 
-if (toggleFbBtn && fbTokenInput) {
-  toggleFbBtn.addEventListener('click', function() {
-    const isPassword = fbTokenInput.type === 'password';
-    fbTokenInput.type = isPassword ? 'text' : 'password';
-    this.innerHTML = isPassword ? '<i class=\"bi bi-eye-slash\"></i>' : '<i class=\"bi bi-eye\"></i>';
-  });
-}
+if (testLiBtn && liTokenInput) {
+  testLiBtn.addEventListener('click', function() {
+    const token = liTokenInput.value.trim();
+    const origHtml = testLiBtn.innerHTML;
+    testLiBtn.disabled = true;
+    testLiBtn.innerHTML = '<span class=\"spinner-border spinner-border-sm me-1\"></span> Testing...';
+    feedbackLi.style.display = 'none';
 
-if (testFbBtn && fbTokenInput) {
-  testFbBtn.addEventListener('click', function() {
-    const token = fbTokenInput.value.trim();
-    if (!token) {
-      feedbackFb.style.display = 'block';
-      feedbackFb.className = 'small mt-2 text-danger';
-      feedbackFb.innerHTML = '<i class=\"bi bi-exclamation-circle me-1\"></i> Please paste a Facebook access token to test.';
-      return;
-    }
-    const origHtml = testFbBtn.innerHTML;
-    testFbBtn.disabled = true;
-    testFbBtn.innerHTML = '<span class=\"spinner-border spinner-border-sm me-1\"></span> Testing...';
-    feedbackFb.style.display = 'none';
-
-    fetch('test-facebook-api.php', {
+    fetch('test-linkedin-api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'access_token=' + encodeURIComponent(token)
     })
     .then(r => r.json())
     .then(data => {
-      feedbackFb.style.display = 'block';
+      feedbackLi.style.display = 'block';
       if (data.success) {
-        feedbackFb.className = 'small mt-2 text-success fw-semibold';
-        feedbackFb.innerHTML = '<i class=\"bi bi-check-circle me-1\"></i> ' + data.message;
+        feedbackLi.className = 'small mt-2 text-success fw-semibold';
+        feedbackLi.innerHTML = '<i class=\"bi bi-check-circle me-1\"></i> ' + data.message;
       } else {
-        feedbackFb.className = 'small mt-2 text-danger fw-semibold';
-        feedbackFb.innerHTML = '<i class=\"bi bi-x-circle me-1\"></i> ' + data.message;
+        feedbackLi.className = 'small mt-2 text-danger fw-semibold';
+        feedbackLi.innerHTML = '<i class=\"bi bi-x-circle me-1\"></i> ' + data.message;
       }
     })
     .catch(err => {
-      feedbackFb.style.display = 'block';
-      feedbackFb.className = 'small mt-2 text-danger';
-      feedbackFb.innerHTML = '<i class=\"bi bi-exclamation-triangle me-1\"></i> Server communication error.';
+      feedbackLi.style.display = 'block';
+      feedbackLi.className = 'small mt-2 text-danger';
+      feedbackLi.innerHTML = '<i class=\"bi bi-exclamation-triangle me-1\"></i> Server communication error.';
     })
     .finally(() => {
-      testFbBtn.disabled = false;
-      testFbBtn.innerHTML = origHtml;
+      testLiBtn.disabled = false;
+      testLiBtn.innerHTML = origHtml;
     });
   });
 }

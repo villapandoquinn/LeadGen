@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
-require_once __DIR__ . '/../services/FacebookMetaService.php';
+require_once __DIR__ . '/../services/LinkedInLeadService.php';
 
 header('Content-Type: application/json');
 
@@ -10,12 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $accessToken = trim($_POST['access_token'] ?? '');
-if (empty($accessToken)) {
-    echo json_encode(['success' => false, 'message' => 'Facebook Meta Access Token is required.']);
-    exit;
-}
-
-$service = new FacebookMetaService($accessToken);
+$service = new LinkedInLeadService($accessToken);
 $res = $service->testKey($accessToken);
 
 echo json_encode($res);

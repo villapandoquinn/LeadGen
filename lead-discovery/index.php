@@ -1,23 +1,23 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
 require_once __DIR__ . '/../services/GooglePlacesService.php';
-require_once __DIR__ . '/../services/FacebookMetaService.php';
+require_once __DIR__ . '/../services/LinkedInLeadService.php';
 
 $pageEyebrow = 'Lead Generation';
 $pageTitle = 'Lead Discovery';
 $activePage = 'lead-discovery';
 
 $sourceSource = trim($_GET['source'] ?? 'google');
-if (!in_array($sourceSource, ['google', 'facebook'])) {
+if (!in_array($sourceSource, ['google', 'linkedin'])) {
     $sourceSource = 'google';
 }
 
 $placesService = new GooglePlacesService();
-$metaService = new FacebookMetaService();
+$linkedinService = new LinkedInLeadService();
 $isGoogleConfigured = $placesService->isConfigured();
-$isMetaConfigured = $metaService->isConfigured();
+$isLinkedinConfigured = $linkedinService->isConfigured();
 
-$isApiConfigured = ($sourceSource === 'facebook') ? $isMetaConfigured : $isGoogleConfigured;
+$isApiConfigured = ($sourceSource === 'linkedin') ? $isLinkedinConfigured : $isGoogleConfigured;
 
 $campaignId = isset($_GET['campaign_id']) ? (int)$_GET['campaign_id'] : 0;
 $industryQuery = trim($_GET['industry'] ?? '');
@@ -54,8 +54,8 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
     $fullQuery = trim("{$industryQuery} {$keywordsQuery} in {$locationQuery}");
     if (empty($fullQuery)) $fullQuery = 'businesses';
 
-    if ($sourceSource === 'facebook') {
-        $searchResp = $metaService->searchPages($fullQuery, [
+    if ($sourceSource === 'linkedin') {
+        $searchResp = $linkedinService->searchLeads($fullQuery, [
             'limit' => 20
         ]);
     } else {
@@ -70,17 +70,17 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
         $prospects = $searchResp['results'] ?? [];
         $returnedPageToken = $searchResp['next_page_token'] ?? null;
 
-        if ($sourceSource === 'facebook') {
-            $metaService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
+        if ($sourceSource === 'linkedin') {
+            $linkedinService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
             $incKws = array_filter(array_map('trim', explode(',', $keywordsQuery)));
             $exKws = array_filter(array_map('trim', explode(',', $excludeKeywordsQuery)));
-            $metaService->qualifyProspects($prospects, $incKws, $exKws, $industryQuery);
+            $linkedinService->qualifyProspects($prospects, $incKws, $exKws, $industryQuery);
 
             if ($relevanceFilter !== '') {
                 $prospects = array_values(array_filter($prospects, fn($p) => ($p['qualification'] ?? '') === $relevanceFilter));
             }
 
-            $metaService->logDiscovery($pdo, $currentWorkspaceId, $campaignId ?: null, $userId, $fullQuery, count($prospects));
+            $linkedinService->logDiscovery($pdo, $currentWorkspaceId, $campaignId ?: null, $userId, $fullQuery, count($prospects));
         } else {
             $placesService->enrichDuplicates($prospects, $pdo, $currentWorkspaceId);
             $incKws = array_filter(array_map('trim', explode(',', $keywordsQuery)));
@@ -123,8 +123,8 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?= $sourceSource === 'facebook' ? 'active' : '' ?>" href="index.php?source=facebook<?= $campaignId ? '&campaign_id='.$campaignId : '' ?>">
-            <i class="bi bi-facebook me-1"></i> Facebook Meta API
+          <a class="nav-link <?= $sourceSource === 'linkedin' ? 'active' : '' ?>" href="index.php?source=linkedin<?= $campaignId ? '&campaign_id='.$campaignId : '' ?>">
+            <i class="bi bi-linkedin me-1"></i> LinkedIn Lead Gen
           </a>
         </li>
       </ul>

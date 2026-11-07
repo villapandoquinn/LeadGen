@@ -19,10 +19,19 @@ $timezone = trim($_POST['timezone'] ?? 'America/New_York');
 $dailyLimit = (int)($_POST['daily_limit'] ?? 500);
 $enableTracking = !empty($_POST['enable_tracking']);
 $senderName = trim($_POST['sender_name'] ?? 'Primovative Team');
-$smtpHost = trim($_POST['smtp_host'] ?? '');
+$senderEmail = trim($_POST['sender_email'] ?? $supportEmail);
+
+$smtpHost = trim($_POST['smtp_host'] ?? 'smtp.gmail.com');
 $smtpPort = (int)($_POST['smtp_port'] ?? 587);
+$smtpEncryption = trim($_POST['smtp_encryption'] ?? 'TLS');
+$smtpUsername = trim($_POST['smtp_username'] ?? '');
+$smtpPassword = trim($_POST['smtp_password'] ?? '');
+
 $googleApiKey = trim($_POST['google_maps_api_key'] ?? '');
-$facebookAccessToken = trim($_POST['facebook_access_token'] ?? '');
+$linkedInClientId = trim($_POST['linkedin_client_id'] ?? '');
+$linkedInClientSecret = trim($_POST['linkedin_client_secret'] ?? '');
+$linkedInRedirectUri = trim($_POST['linkedin_redirect_uri'] ?? '');
+$linkedInAccessToken = trim($_POST['linkedin_access_token'] ?? '');
 
 $settingsFile = __DIR__ . '/../config/settings.json';
 $current = [];
@@ -37,10 +46,17 @@ $payload = [
     'daily_limit' => $dailyLimit,
     'enable_tracking' => $enableTracking,
     'sender_name' => $senderName,
-    'smtp_host' => $smtpHost,
-    'smtp_port' => $smtpPort,
+    'sender_email' => $senderEmail,
+    'smtp_host' => $smtpHost ?: 'smtp.gmail.com',
+    'smtp_port' => $smtpPort ?: 587,
+    'smtp_encryption' => $smtpEncryption ?: 'TLS',
+    'smtp_username' => $smtpUsername ?: ($current['smtp_username'] ?? ''),
+    'smtp_password' => $smtpPassword ?: ($current['smtp_password'] ?? ''),
     'google_maps_api_key' => $googleApiKey ?: ($current['google_maps_api_key'] ?? ''),
-    'facebook_access_token' => $facebookAccessToken ?: ($current['facebook_access_token'] ?? ''),
+    'linkedin_client_id' => $linkedInClientId ?: ($current['linkedin_client_id'] ?? ''),
+    'linkedin_client_secret' => $linkedInClientSecret ?: ($current['linkedin_client_secret'] ?? ''),
+    'linkedin_redirect_uri' => $linkedInRedirectUri ?: ($current['linkedin_redirect_uri'] ?? ''),
+    'linkedin_access_token' => $linkedInAccessToken ?: ($current['linkedin_access_token'] ?? ''),
     'updated_at' => date('Y-m-d H:i:s')
 ];
 
@@ -57,4 +73,5 @@ file_put_contents($settingsFile, json_encode(array_merge($current, $payload), JS
 
 header('Location: index.php?success=saved');
 exit;
+
 

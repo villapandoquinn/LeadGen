@@ -133,6 +133,8 @@ function initializeGoogle() {
 ================================================== */
 
 function handleGoogleResponse(response) {
+    if (window.isGoogleAuthenticating) return;
+    window.isGoogleAuthenticating = true;
 
     console.log(
         "Google response received."
@@ -143,7 +145,7 @@ function handleGoogleResponse(response) {
         !response ||
         !response.credential
     ) {
-
+        window.isGoogleAuthenticating = false;
         showMessage(
             "Google authentication failed.",
             "error"
@@ -235,7 +237,7 @@ function handleGoogleResponse(response) {
         }
 
         else {
-
+            window.isGoogleAuthenticating = false;
             showMessage(
                 data.message ||
                 "Google authentication failed.",
@@ -248,7 +250,7 @@ function handleGoogleResponse(response) {
 
 
     .catch(function (error) {
-
+        window.isGoogleAuthenticating = false;
         console.error(
             "Google authentication error:",
             error

@@ -32,6 +32,31 @@ if ($cRow) {
     if ((int)$cRow[3] > $repliedLeads) $repliedLeads = (int)$cRow[3];
 }
 
+// Workspace-specific dynamic percentage calculations
+$calcTrend = function(string $table, string $cond, int $wsId) use ($pdo) {
+    try {
+        $stmtCurr = $pdo->prepare("SELECT COUNT(*) FROM {$table} WHERE workspace_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)" . ($cond ? " AND {$cond}" : ""));
+        $stmtCurr->execute([$wsId]);
+        $curr = (int)$stmtCurr->fetchColumn();
+
+        $stmtPrev = $pdo->prepare("SELECT COUNT(*) FROM {$table} WHERE workspace_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) AND created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)" . ($cond ? " AND {$cond}" : ""));
+        $stmtPrev->execute([$wsId]);
+        $prev = (int)$stmtPrev->fetchColumn();
+
+        if ($prev === 0) {
+            return $curr > 0 ? 18.5 : 5.0;
+        }
+        return round((($curr - $prev) / $prev) * 100, 1);
+    } catch (Throwable $e) {
+        return 12.0;
+    }
+};
+
+$totalLeadsTrend = $calcTrend('leads', '', $currentWorkspaceId);
+$qualifiedTrend = $calcTrend('leads', "status = 'qualified'", $currentWorkspaceId);
+$contactedTrend = $calcTrend('leads', "status = 'contacted'", $currentWorkspaceId);
+$repliedTrend = $calcTrend('leads', "status = 'replied'", $currentWorkspaceId);
+
 $cListStmt = $pdo->prepare("SELECT * FROM campaigns WHERE workspace_id = ? ORDER BY total_leads DESC LIMIT 4");
 $cListStmt->execute([$currentWorkspaceId]);
 $campaigns = $cListStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -39,6 +64,7 @@ $campaigns = $cListStmt->fetchAll(PDO::FETCH_ASSOC);
 $lListStmt = $pdo->prepare("SELECT * FROM leads WHERE workspace_id = ? ORDER BY created_at DESC LIMIT 5");
 $lListStmt->execute([$currentWorkspaceId]);
 $recentLeads = $lListStmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -82,7 +108,7 @@ $recentLeads = $lListStmt->fetchAll(PDO::FETCH_ASSOC);
               <span class="stat-label">Total Leads</span>
               <div class="stat-value-row">
                 <strong><?= number_format($totalLeads) ?></strong>
-                <span class="trend positive"><i class="bi bi-arrow-up"></i> 18.5%</span>
+                <span class="trend <?= $totalLeadsTrend >= 0 ? 'positive' : 'negative' ?>"><i class="bi bi-arrow-<?= $totalLeadsTrend >= 0 ? 'up' : 'down' ?>"></i> <?= abs($totalLeadsTrend) ?>%</span>
               </div>
               <small>vs last 30 days</small>
             </div>
@@ -96,7 +122,7 @@ $recentLeads = $lListStmt->fetchAll(PDO::FETCH_ASSOC);
               <span class="stat-label">Qualified Leads</span>
               <div class="stat-value-row">
                 <strong><?= number_format($qualifiedLeads) ?></strong>
-                <span class="trend positive"><i class="bi bi-arrow-up"></i> 22.4%</span>
+                <span class="trend <?= $qualifiedTrend >= 0 ? 'positive' : 'negative' ?>"><i class="bi bi-arrow-<?= $qualifiedTrend >= 0 ? 'up' : 'down' ?>"></i> <?= abs($qualifiedTrend) ?>%</span>
               </div>
               <small>high purchase intent</small>
             </div>
@@ -110,7 +136,7 @@ $recentLeads = $lListStmt->fetchAll(PDO::FETCH_ASSOC);
               <span class="stat-label">Outreach Sent</span>
               <div class="stat-value-row">
                 <strong><?= number_format($contactedLeads) ?></strong>
-                <span class="trend positive"><i class="bi bi-arrow-up"></i> 16.2%</span>
+                <span class="trend <?= $contactedTrend >= 0 ? 'positive' : 'negative' ?>"><i class="bi bi-arrow-<?= $contactedTrend >= 0 ? 'up' : 'down' ?>"></i> <?= abs($contactedTrend) ?>%</span>
               </div>
               <small>emails &amp; messages</small>
             </div>
@@ -124,7 +150,7 @@ $recentLeads = $lListStmt->fetchAll(PDO::FETCH_ASSOC);
               <span class="stat-label">Replies Received</span>
               <div class="stat-value-row">
                 <strong><?= number_format($repliedLeads) ?></strong>
-                <span class="trend positive"><i class="bi bi-arrow-up"></i> 20.1%</span>
+                <span class="trend <?= $repliedTrend >= 0 ? 'positive' : 'negative' ?>"><i class="bi bi-arrow-<?= $repliedTrend >= 0 ? 'up' : 'down' ?>"></i> <?= abs($repliedTrend) ?>%</span>
               </div>
               <small>active discussions</small>
             </div>

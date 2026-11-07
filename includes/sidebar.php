@@ -130,7 +130,7 @@ $activePage = $activePage ?? 'dashboard';
         <button type="button" class="account-card w-100 text-start border-0 bg-transparent dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;">
           <div style="display:flex;align-items:center;gap:12px;min-width:0;">
             <?php if (!empty($userPicUrl)): ?>
-              <img src="<?= htmlspecialchars($userPicUrl) ?>" alt="Avatar" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;">
+              <img src="<?= htmlspecialchars($userPicUrl) ?>" alt="Avatar" class="rounded-circle" style="width:36px;height:36px;object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<div class=\'avatar\' style=\'width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#2563eb;color:#fff;font-weight:700;font-size:13px;\'>' + '<?= htmlspecialchars($initials) ?>' + '</div>';">
             <?php else: ?>
               <div class="avatar"><?= htmlspecialchars($initials) ?></div>
             <?php endif; ?>

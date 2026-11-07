@@ -25,6 +25,10 @@ $canManageMembers = $workspaceService->hasPermission($userWsRole, 'manage_member
 $members = $workspaceService->getMembers($wsId);
 $stats = $billingService->getUsageStats($wsId);
 
+$availUsersStmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id NOT IN (SELECT user_id FROM workspace_members WHERE workspace_id = ?) ORDER BY name ASC");
+$availUsersStmt->execute([$wsId]);
+$availableUsers = $availUsersStmt->fetchAll(PDO::FETCH_ASSOC);
+
 $pageEyebrow = 'Workspaces';
 $pageTitle = $ws['name'];
 $activePage = 'workspaces';
@@ -137,8 +141,19 @@ $activePage = 'workspaces';
         <?= csrf_field() ?>
         <input type="hidden" name="workspace_id" value="<?= $wsId ?>">
         <div class="modal-body">
-          <div class="mb-3"><label class="form-label small fw-semibold">Email</label><input type="email" name="email" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label small fw-semibold">Name</label><input type="text" name="name" class="form-control"></div>
+          <?php if (!empty($availableUsers)): ?>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Select Existing System User</label>
+              <select class="form-select" onchange="if(this.value){document.getElementById('memberEmailInput').value=this.value; const opt=this.options[this.selectedIndex]; document.getElementById('memberNameInput').value=opt.dataset.name||'';}">
+                <option value="">-- Choose existing user or type below --</option>
+                <?php foreach ($availableUsers as $au): ?>
+                  <option value="<?= htmlspecialchars($au['email']) ?>" data-name="<?= htmlspecialchars($au['name']) ?>"><?= htmlspecialchars($au['name']) ?> (<?= htmlspecialchars($au['email']) ?>)</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          <?php endif; ?>
+          <div class="mb-3"><label class="form-label small fw-semibold">Email</label><input type="email" id="memberEmailInput" name="email" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label small fw-semibold">Name</label><input type="text" id="memberNameInput" name="name" class="form-control"></div>
           <div class="mb-3"><label class="form-label small fw-semibold">Role</label>
             <select name="role" class="form-select">
               <option value="member" selected>Member</option>

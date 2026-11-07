@@ -8,5 +8,13 @@
     "smtp_host": "smtp.sendgrid.net",
     "smtp_port": 587,
     "google_maps_api_key": "AIzaSyCjhVgMLeF_HuLtMLpJqstAibDRwtP6KTQ",
-    "updated_at": "2026-11-01 11:21:43"
+    "updated_at": "2026-11-07 19:30:16",
+    "sender_email": "support@primovative.com",
+    "smtp_encryption": "TLS",
+    "smtp_username": "",
+    "smtp_password": "",
+    "linkedin_client_id": "",
+    "linkedin_client_secret": "",
+    "linkedin_redirect_uri": "",
+    "linkedin_access_token": ""
 }
