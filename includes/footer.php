@@ -1,5 +1,5 @@
     <footer class="app-footer">
-      <span>&copy; 2026 Primovative Co. &bull; LeadFlow</span>
+      <span>&copy; 2026 ProspectHunt &bull; Powered by Primovative Co.</span>
       <span>Lead Generation Platform Foundation</span>
     </footer>
   </div>

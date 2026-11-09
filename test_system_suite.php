@@ -89,11 +89,12 @@ assertTest(!empty($subWs2) && in_array($subWs2['status'], ['active', 'trial']), 
 $quotaLeads = $billingService->checkQuota($ws2Id, 'leads');
 assertTest($quotaLeads === true, "Lead quota check passed for new workspace");
 
-$payRes = $billingService->processSubscriptionPayment($ws2Id, 2, 'monthly', ['last4' => '4242', 'brand' => 'visa']);
+$basicPlanId = (int)$pdo->query("SELECT id FROM subscription_plans WHERE slug = 'basic' LIMIT 1")->fetchColumn();
+$payRes = $billingService->processSubscriptionPayment($ws2Id, $basicPlanId, 'monthly', ['last4' => '4242', 'brand' => 'visa']);
 assertTest($payRes['success'] === true && !empty($payRes['invoice_number']), "Payment processed and invoice generated: " . ($payRes['invoice_number'] ?? ''));
 
 $subAfterPay = $billingService->getWorkspaceSubscription($ws2Id);
-assertTest((int)$subAfterPay['plan_id'] === 2 && $subAfterPay['status'] === 'active', "Subscription updated to Growth Pro (Plan ID 2)");
+assertTest((int)$subAfterPay['plan_id'] === $basicPlanId && $subAfterPay['status'] === 'active', "Subscription updated to Basic Plan");
 
 // 6. Lead Discovery & Qualification Engine
 echo "\n--- 6. Lead Discovery & Qualification Engine ---\n";

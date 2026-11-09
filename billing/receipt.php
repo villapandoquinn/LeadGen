@@ -67,7 +67,7 @@ if (!$txn) {
       <tr>
         <td>
           <strong><?= htmlspecialchars($txn['notes'] ?: 'Subscription Plan Renewal') ?></strong>
-          <div class="small text-muted">Official LeadFlow Platform Services</div>
+          <div class="small text-muted">Official ProspectHunt Platform Services</div>
         </td>
         <td class="text-end fw-bold">PHP <?= number_format($txn['amount'], 2) ?></td>
       </tr>

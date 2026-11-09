@@ -6,6 +6,18 @@ try {
     // 1. Ensure subscription_plans has Basic (1,899) and Premium (2,499)
     $plans = [
         [
+            'name' => 'Starter',
+            'slug' => 'starter',
+            'description' => 'Essential prospecting tools for individuals and small teams.',
+            'price_monthly' => 0.00,
+            'price_annual' => 0.00,
+            'max_users' => 2,
+            'max_leads' => 250,
+            'max_campaigns' => 3,
+            'max_outreach' => 500,
+            'features' => json_encode(['lead_discovery_google', 'basic_ai', 'lead_management', 'campaigns', 'workspace', 'users', 'dashboard', 'analytics_standard', 'email_smtp'])
+        ],
+        [
             'name' => 'Basic',
             'slug' => 'basic',
             'description' => 'Essential lead generation & Google Maps prospecting for businesses.',

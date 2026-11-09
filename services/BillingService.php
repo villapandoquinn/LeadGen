@@ -59,6 +59,21 @@ class BillingService {
         $outreachCount = (int)$this->pdo->query("SELECT COUNT(*) FROM outreach WHERE workspace_id = {$workspaceId}")->fetchColumn();
         return ['leads_used' => $leadsCount, 'leads_limit' => $maxLeads, 'campaigns_used' => $campCount, 'campaigns_limit' => $maxCampaigns, 'users_used' => $userCount, 'users_limit' => $maxUsers, 'outreach_used' => $outreachCount, 'outreach_limit' => $maxOutreach];
     }
+    public function checkQuota(int $workspaceId, string $quotaType): bool {
+        $stats = $this->getUsageStats($workspaceId);
+        switch ($quotaType) {
+            case 'leads':
+                return $stats['leads_used'] < $stats['leads_limit'];
+            case 'campaigns':
+                return $stats['campaigns_used'] < $stats['campaigns_limit'];
+            case 'users':
+                return $stats['users_used'] < $stats['users_limit'];
+            case 'outreach':
+                return $stats['outreach_used'] < $stats['outreach_limit'];
+            default:
+                return true;
+        }
+    }
     public function getPaymentHistory(int $workspaceId): array {
         $stmt = $this->pdo->prepare("SELECT * FROM payment_transactions WHERE workspace_id = ? ORDER BY created_at DESC");
         $stmt->execute([$workspaceId]);

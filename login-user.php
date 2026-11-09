@@ -13,13 +13,13 @@ function showAuthError(string $message, bool $isUnverified = false, string $emai
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Authentication Notice — LeadFlow</title>
+        <title>Authentication Notice — ProspectHunt</title>
         <link rel="stylesheet" href="css/auth.css">
     </head>
     <body>
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f7f8fc; padding: 20px; font-family: Inter, sans-serif;">
         <div style="width: 100%; max-width: 460px; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); text-align: center;">
-            <div style="width: 52px; height: 52px; background: #6366f1; color: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin: 0 auto 24px auto; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);">L</div>
+            <div style="width: 52px; height: 52px; background: #6366f1; color: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin: 0 auto 24px auto; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);">P</div>
             <h2 style="font-size: 24px; font-weight: 750; color: #171923; margin-bottom: 8px; letter-spacing: -0.5px;">Authentication Notice</h2>
             <p style="font-size: 14px; color: #777d88; margin-bottom: 24px;">Please review the notice below to continue.</p>
             
@@ -37,7 +37,7 @@ function showAuthError(string $message, bool $isUnverified = false, string $emai
             </div>
 
             <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #edf2f7; font-size: 12px; color: #a1a6b0; font-weight: 500;">
-                LeadFlow &mdash; Powered by Primovative Co.
+                ProspectHunt &mdash; Powered by Primovative Co.
             </div>
         </div>
     </div>

@@ -27,7 +27,7 @@ if (empty($token) || empty($email)) {
         // Mark verified
         $upd = $pdo->prepare("UPDATE users SET email_verified_at = NOW(), email_verification_token = NULL, email_verification_expires_at = NULL, status = 'active' WHERE id = ?");
         $upd->execute([$user['id']]);
-        $success = "Email address successfully verified! You can now sign in to your LeadFlow account.";
+        $success = "Email address successfully verified! You can now sign in to your ProspectHunt account.";
     }
 }
 ?>
@@ -36,13 +36,13 @@ if (empty($token) || empty($email)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification — LeadFlow</title>
+    <title>Email Verification — ProspectHunt</title>
     <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
 <div class="auth-page" style="justify-content: center; align-items: center;">
     <div class="form-panel" style="width: 100%; max-width: 500px; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;">
-        <div class="logo-mark" style="margin: 0 auto 20px auto;">L</div>
+        <div class="logo-mark" style="margin: 0 auto 20px auto;">P</div>
         <h2 style="font-size: 24px; font-weight: 750; margin-bottom: 12px;">Email Verification</h2>
         
         <?php if (!empty($error)): ?>
@@ -58,7 +58,7 @@ if (empty($token) || empty($email)) {
         <?php endif; ?>
 
         <div style="margin-top: 32px; font-size: 11px; color: #a1a6b0;">
-            LeadFlow &mdash; Powered by Primovative Co.
+            ProspectHunt &mdash; Powered by Primovative Co.
         </div>
     </div>
 </div>

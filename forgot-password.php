@@ -12,7 +12,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password — LeadFlow</title>
+    <title>Forgot Password — ProspectHunt</title>
     <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
@@ -20,8 +20,8 @@ if (isset($_SESSION['user_id'])) {
     <section class="brand-panel">
         <div class="brand-inner">
             <div class="brand-logo">
-                <div class="logo-mark">L</div>
-                <span>LeadFlow</span>
+                <div class="logo-mark">P</div>
+                <span>ProspectHunt</span>
             </div>
             <div class="brand-content">
                 <div class="eyebrow">LEAD GENERATION PLATFORM</div>
@@ -30,15 +30,15 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
         <div class="brand-footer">
-            LeadFlow &mdash; Powered by Primovative Co.
+            ProspectHunt &mdash; Powered by Primovative Co.
         </div>
     </section>
 
     <section class="form-panel" style="width: 52%; min-height: 100vh; padding: 60px; display: flex; flex-direction: column; justify-content: center;">
         <div class="form-container" style="max-width: 440px; width: 100%; margin: auto;">
             <div class="mobile-logo" style="display: none; align-items: center; gap: 12px; margin-bottom: 40px;">
-                <div class="logo-mark">L</div>
-                <span>LeadFlow</span>
+                <div class="logo-mark">P</div>
+                <span>ProspectHunt</span>
             </div>
 
             <div class="form-header" style="margin-bottom: 30px;">
@@ -65,7 +65,7 @@ if (isset($_SESSION['user_id'])) {
             </div>
 
             <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #a1a6b0;">
-                LeadFlow &mdash; Powered by Primovative Co.
+                ProspectHunt &mdash; Powered by Primovative Co.
             </div>
         </div>
     </section>

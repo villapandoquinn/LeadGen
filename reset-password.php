@@ -29,7 +29,7 @@ if (empty($token) || empty($email)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password — LeadFlow</title>
+    <title>Reset Password — ProspectHunt</title>
     <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
@@ -101,14 +101,14 @@ if (form) {
 
     <section class="brand-panel">
         <div class="brand-inner">
-            <div class="brand-logo"><div class="logo-mark">L</div><span>LeadFlow</span></div>
+            <div class="brand-logo"><div class="logo-mark">P</div><span>ProspectHunt</span></div>
             <div class="brand-content">
                 <div class="eyebrow">LEAD GENERATION PLATFORM</div>
                 <h1>Choose a new password. <span>Secure your account.</span></h1>
-                <p>Create a strong password with at least 8 characters to secure your LeadFlow account.</p>
+                <p>Create a strong password with at least 8 characters to secure your ProspectHunt account.</p>
             </div>
         </div>
-        <div class="brand-footer">LeadFlow &mdash; Powered by Primovative Co.</div>
+        <div class="brand-footer">ProspectHunt &mdash; Powered by Primovative Co.</div>
     </section>
     <section class="form-panel" style="width: 52%; min-height: 100vh; padding: 60px; display: flex; flex-direction: column; justify-content: center;">
         <div class="form-container" style="max-width: 440px; width: 100%; margin: auto;">

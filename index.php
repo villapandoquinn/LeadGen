@@ -29,7 +29,7 @@ if (isset($_SESSION['user_id'])) {
         content="width=device-width, initial-scale=1.0">
 
     <title>
-        Sign In — LeadFlow
+        Sign In — ProspectHunt
     </title>
 
     <link
@@ -53,11 +53,11 @@ if (isset($_SESSION['user_id'])) {
             <div class="brand-logo">
 
                 <div class="logo-mark">
-                    L
+                    P
                 </div>
 
                 <span>
-                    LeadFlow
+                    ProspectHunt
                 </span>
 
             </div>
@@ -70,8 +70,8 @@ if (isset($_SESSION['user_id'])) {
                 </div>
 
                 <h1>
-                    Grow your pipeline.
-                    <span>Close more.</span>
+                    Find your next
+                    <span>customer.</span>
                 </h1>
 
                 <p>
@@ -155,11 +155,7 @@ if (isset($_SESSION['user_id'])) {
         <div class="brand-footer">
 
             <span>
-                © 2026 LeadFlow
-            </span>
-
-            <span>
-                Lead Generation System
+                ProspectHunt &mdash; Powered by Primovative Co.
             </span>
 
         </div>
@@ -177,11 +173,11 @@ if (isset($_SESSION['user_id'])) {
             <div class="mobile-logo">
 
                 <div class="logo-mark">
-                    L
+                    P
                 </div>
 
                 <span>
-                    LeadFlow
+                    ProspectHunt
                 </span>
 
             </div>
