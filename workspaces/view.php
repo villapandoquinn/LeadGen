@@ -90,7 +90,10 @@ $activePage = 'workspaces';
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h3 class="h6 fw-bold mb-0">Members (<?= count($members) ?>)</h3>
               <?php if ($canManageMembers): ?>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addMemberModal"><i class="bi bi-plus-lg me-1"></i> Add</button>
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#batchAddMembersModal"><i class="bi bi-people me-1"></i> Batch Assign</button>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addMemberModal"><i class="bi bi-plus-lg me-1"></i> Add</button>
+                </div>
               <?php endif; ?>
             </div>
             <div class="table-responsive">
@@ -164,6 +167,49 @@ $activePage = 'workspaces';
           </div>
         </div>
         <div class="modal-footer border-0 pt-0"><button type="submit" class="btn btn-primary">Add Member</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="batchAddMembersModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Batch Assign Multiple Users</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form method="POST" action="member_batch_add.php">
+        <?= csrf_field() ?>
+        <input type="hidden" name="workspace_id" value="<?= $wsId ?>">
+        <div class="modal-body">
+          <?php if (!empty($availableUsers)): ?>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Select Multiple Users to Assign</label>
+              <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                <?php foreach ($availableUsers as $au): ?>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="user_ids[]" value="<?= $au['id'] ?>" id="au_<?= $au['id'] ?>">
+                    <label class="form-check-label small" for="au_<?= $au['id'] ?>">
+                      <strong><?= htmlspecialchars($au['name']) ?></strong> (<?= htmlspecialchars($au['email']) ?>)
+                    </label>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+            <div class="mb-3"><label class="form-label small fw-semibold">Assigned Role for Selected Users</label>
+              <select name="role" class="form-select">
+                <option value="member" selected>Member</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Administrator</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+          <?php else: ?>
+            <p class="text-muted small">No other registered users available to assign.</p>
+          <?php endif; ?>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <?php if (!empty($availableUsers)): ?>
+            <button type="submit" class="btn btn-primary btn-sm">Assign Selected Users</button>
+          <?php endif; ?>
+        </div>
       </form>
     </div>
   </div>

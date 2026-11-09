@@ -52,14 +52,14 @@ class LinkedInLeadService {
                 'email' => 'contact@' . strtolower(preg_replace('/[^a-z0-9]/', '', $query)) . 'growth.com',
                 'phone' => '+1 (555) 382-9102', 'website' => 'https://www.' . strtolower(preg_replace('/[^a-z0-9]/', '', $query)) . 'growth.com',
                 'industry' => $query, 'location' => 'San Francisco, CA', 'address' => '100 Market St, San Francisco, CA',
-                'rating' => 4.8, 'reviews_count' => 124, 'score' => 92, 'source' => 'linkedin', 'place_id' => 'li_' . md5($query . '1')
+                'rating' => 4.8, 'reviews_count' => 124, 'employee_count' => null, 'employee_count_source' => null, 'score' => 92, 'source' => 'linkedin', 'place_id' => 'li_' . md5($query . '1')
             ],
             [
                 'company' => 'Apex ' . trim($query) . ' Solutions', 'name' => 'David Miller', 'title' => 'Director of BD',
                 'email' => 'info@apex' . strtolower(preg_replace('/[^a-z0-9]/', '', $query)) . '.io',
                 'phone' => '+1 (555) 491-8203', 'website' => 'https://www.apex' . strtolower(preg_replace('/[^a-z0-9]/', '', $query)) . '.io',
                 'industry' => $query, 'location' => 'New York, NY', 'address' => '450 Lexington Ave, New York, NY',
-                'rating' => 4.9, 'reviews_count' => 88, 'score' => 89, 'source' => 'linkedin', 'place_id' => 'li_' . md5($query . '2')
+                'rating' => 4.9, 'reviews_count' => 88, 'employee_count' => null, 'employee_count_source' => null, 'score' => 89, 'source' => 'linkedin', 'place_id' => 'li_' . md5($query . '2')
             ]
         ];
         return ['success' => true, 'configured' => true, 'results' => array_slice($prospects, 0, $limit), 'next_page_token' => null];

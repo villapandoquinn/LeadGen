@@ -206,6 +206,8 @@ class GooglePlacesService {
                     'website' => $website,
                     'rating' => $rating,
                     'reviews_count' => $reviews,
+                    'employee_count' => null,
+                    'employee_count_source' => null,
                     'google_maps_url' => $mapsUrl,
                     'source' => 'google',
                     'score' => $score,

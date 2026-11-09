@@ -136,19 +136,21 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
           <div class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <div>
               <div class="d-flex align-items-center gap-2 mb-1">
-                <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : 'bi-geo-alt-fill text-danger' ?> fs-4"></i>
+                <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : ($sourceSource === 'linkedin' ? 'bi-linkedin text-primary' : 'bi-geo-alt-fill text-danger') ?> fs-4"></i>
                 <h2 class="h6 fw-bold text-dark mb-0">
-                  <?= $sourceSource === 'facebook' ? 'Facebook Meta Access Token Required' : 'Google Maps / Places API Key Required' ?>
+                  <?= $sourceSource === 'facebook' ? 'Facebook Meta Access Token Required' : ($sourceSource === 'linkedin' ? 'LinkedIn Access Token Required' : 'Google Maps / Places API Key Required') ?>
                 </h2>
               </div>
               <p class="text-dark small mb-0" style="max-width: 680px;">
                 <?= $sourceSource === 'facebook' 
                     ? 'Lead Discovery connects dynamically to Facebook Graph API Pages Search to find targeted business pages with live details. Please configure your Facebook Access Token in Settings.'
-                    : 'Lead Discovery connects dynamically to official Google Maps Platform APIs (Google Places API New) to find real, verified businesses. Please configure your API key in Settings.' ?>
+                    : ($sourceSource === 'linkedin'
+                        ? 'Lead Discovery connects dynamically to LinkedIn Lead Gen & Prospecting APIs to find qualified professional leads. Please configure your LinkedIn Access Token in Settings.'
+                        : 'Lead Discovery connects dynamically to official Google Maps Platform APIs (Google Places API New) to find real, verified businesses. Please configure your API key in Settings.') ?>
               </p>
             </div>
-            <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : 'google-api' ?>" class="btn btn-warning text-dark fw-bold text-nowrap">
-              <i class="bi bi-gear-fill me-1"></i> Configure <?= $sourceSource === 'facebook' ? 'Meta API' : 'Google API' ?>
+            <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : ($sourceSource === 'linkedin' ? 'linkedin-api' : 'google-api') ?>" class="btn btn-warning text-dark fw-bold text-nowrap">
+              <i class="bi bi-gear-fill me-1"></i> Configure <?= $sourceSource === 'facebook' ? 'Meta API' : ($sourceSource === 'linkedin' ? 'LinkedIn API' : 'Google API') ?>
             </a>
           </div>
         </div>
@@ -160,7 +162,7 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
             <i class="bi bi-exclamation-octagon-fill fs-5 text-danger"></i>
             <div>
               <strong>API Error:</strong> <?= htmlspecialchars($apiError) ?>
-              <div class="mt-1 text-muted">Verify your credentials in <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : 'google-api' ?>" class="alert-link">Settings</a>.</div>
+              <div class="mt-1 text-muted">Verify your credentials in <a href="../settings/index.php#<?= $sourceSource === 'facebook' ? 'facebook-api' : ($sourceSource === 'linkedin' ? 'linkedin-api' : 'google-api') ?>" class="alert-link">Settings</a>.</div>
             </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -172,15 +174,15 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
           <div>
             <h2 class="h5 fw-bold mb-1">
-              <?= $sourceSource === 'facebook' ? 'Facebook Meta Business Discovery' : 'Google Maps Business Discovery' ?>
+              <?= $sourceSource === 'facebook' ? 'Facebook Meta Business Discovery' : ($sourceSource === 'linkedin' ? 'LinkedIn Professional Discovery' : 'Google Maps Business Discovery') ?>
             </h2>
             <p class="text-muted small mb-0">
-              <?= $sourceSource === 'facebook' ? 'Search and qualify business pages directly via Facebook Graph API.' : 'Search and qualify real businesses directly via Google Places API.' ?>
+              <?= $sourceSource === 'facebook' ? 'Search and qualify business pages directly via Facebook Graph API.' : ($sourceSource === 'linkedin' ? 'Search and qualify professional leads directly via LinkedIn Lead Gen API.' : 'Search and qualify real businesses directly via Google Places API.') ?>
             </p>
           </div>
           <div class="google-attribution">
-            <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : 'bi-google text-primary' ?>"></i>
-            <span><?= $sourceSource === 'facebook' ? 'Powered by Facebook Graph API' : 'Powered by Google Maps Platform' ?></span>
+            <i class="bi <?= $sourceSource === 'facebook' ? 'bi-facebook text-primary' : ($sourceSource === 'linkedin' ? 'bi-linkedin text-primary' : 'bi-google text-primary') ?>"></i>
+            <span><?= $sourceSource === 'facebook' ? 'Powered by Facebook Graph API' : ($sourceSource === 'linkedin' ? 'Powered by LinkedIn API' : 'Powered by Google Maps Platform') ?></span>
           </div>
         </div>
 
@@ -316,6 +318,9 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
                       <span class="text-muted fw-normal">(<?= number_format($p['reviews_count']) ?>)</span>
                     </span>
                   <?php endif; ?>
+                  <span class="badge bg-light text-secondary border">
+                    <i class="bi bi-people me-1"></i> <?= !empty($p['employee_count']) ? number_format($p['employee_count']) . ' Employees' : 'No Data Found' ?>
+                  </span>
                 </div>
 
                 <?php if (!empty($p['matched_keywords'])): ?>
@@ -377,6 +382,7 @@ if ($isApiConfigured && (!empty($industryQuery) || !empty($locationQuery) || !em
                     data-place-id="<?= htmlspecialchars($p['place_id']) ?>"
                     data-rating="<?= $p['rating'] !== null ? $p['rating'] : '' ?>"
                     data-reviews="<?= $p['reviews_count'] ?>"
+                    data-employee-count="<?= htmlspecialchars($p['employee_count'] ?? 'Not Available') ?>"
                     data-score="<?= $p['score'] ?>"
                   >
                     <i class="bi bi-plus-circle me-1"></i> Import Lead
@@ -444,6 +450,7 @@ function importSingleLead(btn) {
   formData.append('place_id', btn.dataset.placeId || '');
   formData.append('rating', btn.dataset.rating || '');
   formData.append('reviews_count', btn.dataset.reviews || '0');
+  formData.append('employee_count', btn.dataset.employeeCount || 'Not Available');
   formData.append('score', btn.dataset.score || '85');
   formData.append('source', 'google');
   if (campaignId) formData.append('campaign_id', campaignId);

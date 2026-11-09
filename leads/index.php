@@ -9,7 +9,7 @@ $campaignFilter = isset($_GET['campaign_id']) ? (int)$_GET['campaign_id'] : 0;
 $statusFilter = trim($_GET['status'] ?? '');
 $searchQuery = trim($_GET['q'] ?? '');
 
-$sql = "SELECT l.*, c.name as campaign_name FROM leads l LEFT JOIN campaigns c ON l.campaign_id = c.id WHERE l.workspace_id = ?";
+$sql = "SELECT l.*, c.name as campaign_name, u.name as assignee_name FROM leads l LEFT JOIN campaigns c ON l.campaign_id = c.id LEFT JOIN users u ON l.assigned_to = u.id WHERE l.workspace_id = ?";
 $params = [$currentWorkspaceId];
 
 if ($campaignFilter > 0) {
@@ -34,6 +34,10 @@ $leads = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $campStmt = $pdo->prepare("SELECT id, name FROM campaigns WHERE workspace_id = ? ORDER BY name ASC");
 $campStmt->execute([$currentWorkspaceId]);
 $campaigns = $campStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$membersStmt = $pdo->prepare("SELECT u.id, u.name, u.email FROM users u JOIN workspace_members wm ON u.id = wm.user_id WHERE wm.workspace_id = ? AND wm.status = 'active' ORDER BY u.name ASC");
+$membersStmt->execute([$currentWorkspaceId]);
+$workspaceMembers = $membersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totStmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE workspace_id = ?");
 $totStmt->execute([$currentWorkspaceId]);
@@ -129,6 +133,7 @@ $repliedCount = (int)$rStmt->fetchColumn();
                 <th>Company / Contact</th>
                 <th>Source</th>
                 <th>Campaign</th>
+                <th>Assigned Employee</th>
                 <th>Location</th>
                 <th>Score</th>
                 <th>Status</th>
@@ -137,7 +142,7 @@ $repliedCount = (int)$rStmt->fetchColumn();
             </thead>
             <tbody>
               <?php if (empty($leads)): ?>
-                <tr><td colspan="7" class="text-center py-5 text-muted"><i class="bi bi-person-x fs-1 d-block mb-2"></i>No leads found.</td></tr>
+                <tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-person-x fs-1 d-block mb-2"></i>No leads found.</td></tr>
               <?php else: ?>
                 <?php foreach ($leads as $l): ?>
                   <tr>
@@ -147,6 +152,13 @@ $repliedCount = (int)$rStmt->fetchColumn();
                     </td>
                     <td><span class="badge bg-light text-dark border"><?= ucfirst($l['source']) ?></span></td>
                     <td><small class="text-secondary"><?= htmlspecialchars($l['campaign_name'] ?: 'Unassigned') ?></small></td>
+                    <td>
+                      <?php if (!empty($l['assignee_name'])): ?>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-person-fill me-1"></i><?= htmlspecialchars($l['assignee_name']) ?></span>
+                      <?php else: ?>
+                        <span class="badge bg-light text-muted border">Unassigned</span>
+                      <?php endif; ?>
+                    </td>
                     <td><small class="text-muted"><?= htmlspecialchars($l['location'] ?: 'USA') ?></small></td>
                     <td><span class="badge bg-light text-dark border"><?= $l['score'] ?>/100</span></td>
                     <td>
@@ -220,8 +232,13 @@ $repliedCount = (int)$rStmt->fetchColumn();
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-semibold">Location</label>
-                  <input type="text" name="location" class="form-control" placeholder="City, State">
+                  <label class="form-label small fw-semibold">Assign to Employee</label>
+                  <select name="assigned_to" class="form-select">
+                    <option value="">-- Unassigned --</option>
+                    <?php foreach ($workspaceMembers as $wm): ?>
+                      <option value="<?= $wm['id'] ?>"><?= htmlspecialchars($wm['name']) ?> (<?= htmlspecialchars($wm['email']) ?>)</option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
                 <div class="col-12">
                   <label class="form-label small fw-semibold">Notes</label>

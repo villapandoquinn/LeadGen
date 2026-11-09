@@ -5,7 +5,12 @@ $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) { header('Location: index.php'); exit; }
 
 // Workspace isolation
-$stmt = $pdo->prepare("SELECT * FROM campaigns WHERE id = ? AND workspace_id = ?");
+$stmt = $pdo->prepare("
+    SELECT campaigns.*, u.name AS creator_name 
+    FROM campaigns 
+    LEFT JOIN users u ON campaigns.created_by = u.id 
+    WHERE campaigns.id = ? AND campaigns.workspace_id = ?
+");
 $stmt->execute([$id, $currentWorkspaceId]);
 $campaign = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$campaign) { header('Location: index.php?error=not_found'); exit; }
@@ -53,6 +58,7 @@ $pct = min(100, round(($total / max(1, $limit)) * 100));
             <?php if (!empty($campaign['created_at'])): ?>
               &bull; <i class="bi bi-calendar3 me-1"></i>Created <?= date('M d, Y', strtotime($campaign['created_at'])) ?>
             <?php endif; ?>
+            &bull; <i class="bi bi-person me-1"></i>Created by <?= htmlspecialchars($campaign['creator_name'] ?? 'Unknown') ?>
           </div>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">

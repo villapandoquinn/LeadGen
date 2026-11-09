@@ -34,6 +34,8 @@ $address = trim($_POST['address'] ?? $location);
 $placeId = trim($_POST['place_id'] ?? '');
 $rating = isset($_POST['rating']) && $_POST['rating'] !== '' ? (float)$_POST['rating'] : null;
 $reviewsCount = (int)($_POST['reviews_count'] ?? 0);
+$employeeCount = isset($_POST['employee_count']) && $_POST['employee_count'] !== '' && is_numeric($_POST['employee_count']) ? (int)$_POST['employee_count'] : null;
+$employeeSource = $employeeCount !== null ? trim($_POST['employee_count_source'] ?? 'Google Maps / Enrichment') : null;
 $source = trim($_POST['source'] ?? 'google');
 $score = (int)($_POST['score'] ?? 85);
 $campaignId = !empty($_POST['campaign_id']) ? (int)$_POST['campaign_id'] : null;
@@ -85,8 +87,8 @@ try {
 
     // Insert lead scoped to current workspace
     $stmt = $pdo->prepare("
-        INSERT INTO leads (workspace_id, google_place_id, campaign_id, name, company, email, phone, website, industry, location, address, source, status, score, rating, reviews_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)
+        INSERT INTO leads (workspace_id, google_place_id, campaign_id, name, company, email, phone, website, industry, location, address, source, status, score, rating, reviews_count, employee_count, employee_count_source, employee_count_verified_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, " . ($employeeCount !== null ? "NOW()" : "NULL") . ")
     ");
     $stmt->execute([
         $currentWorkspaceId,
@@ -103,7 +105,9 @@ try {
         $source,
         $score,
         $rating,
-        $reviewsCount
+        $reviewsCount,
+        $employeeCount,
+        $employeeSource
     ]);
     $leadId = $pdo->lastInsertId();
 

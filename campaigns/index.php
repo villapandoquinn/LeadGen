@@ -42,21 +42,23 @@ try {
 
     $stmt = $pdo->prepare("
         SELECT
-            id,
-            name,
-            description,
-            industry,
-            keywords,
-            location AS target_location,
-            lead_limit,
-            status,
-            total_leads,
-            contacted_leads AS contacted,
-            replied_leads AS replies,
-            created_at
+            campaigns.id,
+            campaigns.name,
+            campaigns.description,
+            campaigns.industry,
+            campaigns.keywords,
+            campaigns.location AS target_location,
+            campaigns.lead_limit,
+            campaigns.status,
+            campaigns.total_leads,
+            campaigns.contacted_leads AS contacted,
+            campaigns.replied_leads AS replies,
+            campaigns.created_at,
+            u.name AS creator_name
         FROM campaigns
-        WHERE workspace_id = ?
-        ORDER BY created_at DESC
+        LEFT JOIN users u ON campaigns.created_by = u.id
+        WHERE campaigns.workspace_id = ?
+        ORDER BY campaigns.created_at DESC
     ");
     $stmt->execute([$currentWorkspaceId]);
 
@@ -1416,6 +1418,10 @@ function replyRate($contacted, $replies): float
                                     </th>
 
                                     <th>
+                                        Created By
+                                    </th>
+
+                                    <th>
                                         Leads
                                     </th>
 
@@ -1537,6 +1543,19 @@ function replyRate($contacted, $replies): float
                                                 <i class="bi bi-geo-alt-fill"></i>
 
                                                 <?= e($campaign['target_location'] ?? 'Any Location') ?>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- CREATED BY -->
+
+                                        <td>
+
+                                            <span class="badge bg-light text-dark border">
+
+                                                <i class="bi bi-person me-1"></i><?= e($campaign['creator_name'] ?? 'Unknown') ?>
 
                                             </span>
 

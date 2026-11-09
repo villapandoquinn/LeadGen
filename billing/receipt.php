@@ -69,19 +69,19 @@ if (!$txn) {
           <strong><?= htmlspecialchars($txn['notes'] ?: 'Subscription Plan Renewal') ?></strong>
           <div class="small text-muted">Official LeadFlow Platform Services</div>
         </td>
-        <td class="text-end fw-bold">$<?= number_format($txn['amount'], 2) ?> USD</td>
+        <td class="text-end fw-bold">PHP <?= number_format($txn['amount'], 2) ?></td>
       </tr>
       <tr>
         <td class="text-end fw-semibold">Subtotal:</td>
-        <td class="text-end">$<?= number_format($txn['amount'], 2) ?></td>
+        <td class="text-end">PHP <?= number_format($txn['amount'], 2) ?></td>
       </tr>
       <tr>
         <td class="text-end fw-semibold">Tax (0%):</td>
-        <td class="text-end">$0.00</td>
+        <td class="text-end">PHP 0.00</td>
       </tr>
       <tr class="table-light">
         <td class="text-end fw-bold">Total Paid:</td>
-        <td class="text-end fw-bold fs-5 text-primary">$<?= number_format($txn['amount'], 2) ?> USD</td>
+        <td class="text-end fw-bold fs-5 text-primary">PHP <?= number_format($txn['amount'], 2) ?></td>
       </tr>
     </tbody>
   </table>

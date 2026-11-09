@@ -5,14 +5,20 @@ $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) { header('Location: index.php'); exit; }
 
 $stmt = $pdo->prepare("
-    SELECT l.*, c.name as campaign_name 
+    SELECT l.*, c.name as campaign_name, u.name as assignee_name, u.email as assignee_email, wm.role as assignee_role, wm.status as assignee_status
     FROM leads l 
     LEFT JOIN campaigns c ON l.campaign_id = c.id 
+    LEFT JOIN users u ON l.assigned_to = u.id 
+    LEFT JOIN workspace_members wm ON (u.id = wm.user_id AND wm.workspace_id = l.workspace_id)
     WHERE l.id = ? AND l.workspace_id = ?
 ");
 $stmt->execute([$id, $currentWorkspaceId]);
 $lead = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$lead) { header('Location: index.php?error=not_found'); exit; }
+
+$membersStmt = $pdo->prepare("SELECT u.id, u.name, u.email FROM users u JOIN workspace_members wm ON u.id = wm.user_id WHERE wm.workspace_id = ? AND wm.status = 'active' ORDER BY u.name ASC");
+$membersStmt->execute([$currentWorkspaceId]);
+$workspaceMembers = $membersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $outreachStmt = $pdo->prepare("SELECT * FROM outreach WHERE lead_id = ? AND workspace_id = ? ORDER BY created_at DESC");
 $outreachStmt->execute([$id, $currentWorkspaceId]);
@@ -60,6 +66,45 @@ $activePage = 'leads';
       <div class="row g-4">
         <div class="col-12 col-lg-5">
           <div class="dashboard-card p-4 mb-4">
+            <h3 class="h6 fw-bold mb-3"><i class="bi bi-person-badge me-1 text-primary"></i> Assigned Employee</h3>
+            <form method="POST" action="assign.php">
+              <?= csrf_field() ?>
+              <input type="hidden" name="lead_id" value="<?= $lead['id'] ?>">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Responsible Employee</label>
+                <select name="assigned_to" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="">-- Unassigned --</option>
+                  <?php foreach ($workspaceMembers as $wm): ?>
+                    <option value="<?= $wm['id'] ?>" <?= (int)($lead['assigned_to'] ?? 0) === (int)$wm['id'] ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($wm['name']) ?> (<?= htmlspecialchars($wm['email']) ?>)
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+            </form>
+            <div class="small border-top pt-3">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Full Name:</span>
+                <strong class="text-dark"><?= !empty($lead['assignee_name']) ? htmlspecialchars($lead['assignee_name']) : 'Unassigned' ?></strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Email:</span>
+                <span class="text-dark"><?= !empty($lead['assignee_email']) ? htmlspecialchars($lead['assignee_email']) : '—' ?></span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Assigned Date:</span>
+                <span><?= !empty($lead['assigned_to']) ? date('M d, Y', strtotime($lead['created_at'])) : '—' ?></span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Assignment Status:</span>
+                <span class="badge <?= !empty($lead['assigned_to']) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-light text-muted border' ?>">
+                  <?= !empty($lead['assigned_to']) ? 'Active Assignment' : 'Unassigned' ?>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card p-4 mb-4">
             <h3 class="h6 fw-bold mb-3">Lead Overview</h3>
             <div class="mb-3">
               <div class="text-muted small">Lead Score</div>
@@ -69,7 +114,19 @@ $activePage = 'leads';
               </div>
             </div>
             <div class="mb-3"><div class="text-muted small">Campaign</div><div class="small fw-semibold mt-1"><?= $lead['campaign_name'] ? htmlspecialchars($lead['campaign_name']) : 'None' ?></div></div>
-            <div class="mb-3"><div class="text-muted small">Phone</div><div class="small fw-semibold mt-1"><?= htmlspecialchars($lead['phone'] ?: 'N/A') ?></div></div>
+            <div class="mb-3">
+              <div class="text-muted small">Number of Employees</div>
+              <div class="small fw-semibold mt-1">
+                <?php if (!empty($lead['employee_count']) && (int)$lead['employee_count'] > 0): ?>
+                  <?= number_format((int)$lead['employee_count']) ?> Employees
+                  <?php if (!empty($lead['employee_count_source'])): ?>
+                    <span class="text-muted small ms-1">(Source: <?= htmlspecialchars($lead['employee_count_source']) ?>)</span>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <span class="text-muted">No Data Found</span>
+                <?php endif; ?>
+              </div>
+            </div>
             <?php if (!empty($lead['website'])): ?>
               <div class="mb-3"><div class="text-muted small">Website</div><div class="small fw-semibold mt-1"><a href="<?= htmlspecialchars($lead['website']) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($lead['website']) ?></a></div></div>
             <?php endif; ?>

@@ -115,27 +115,27 @@ $isSuccess = isset($_GET['success']);
                 </div>
               </div>
 
-              <h3 class=\"h6 fw-bold mb-3 border-bottom pb-2 mt-4\" id=\"linkedin-api\">
-                <i class=\"bi bi-linkedin text-primary me-1\"></i> LinkedIn Lead Generation API Integration
+              <h3 class="h6 fw-bold mb-3 border-bottom pb-2 mt-4" id="linkedin-api">
+                <i class="bi bi-linkedin text-primary me-1"></i> LinkedIn Lead Generation API Integration
               </h3>
-              <div class=\"row g-3 mb-4\">
-                <div class=\"col-md-6\">
-                  <label class=\"form-label small fw-semibold\">LinkedIn Client ID</label>
-                  <input type=\"text\" name=\"linkedin_client_id\" class=\"form-control\" value=\"<?= htmlspecialchars($settings['linkedin_client_id'] ?? '') ?>\" placeholder=\"Client ID\">
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">LinkedIn Client ID</label>
+                  <input type="text" name="linkedin_client_id" class="form-control" value="<?= htmlspecialchars($settings['linkedin_client_id'] ?? '') ?>" placeholder="Client ID">
                 </div>
-                <div class=\"col-md-6\">
-                  <label class=\"form-label small fw-semibold\">LinkedIn Client Secret</label>
-                  <input type=\"password\" name=\"linkedin_client_secret\" class=\"form-control\" value=\"<?= htmlspecialchars($settings['linkedin_client_secret'] ?? '') ?>\" placeholder=\"Client Secret\">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">LinkedIn Client Secret</label>
+                  <input type="password" name="linkedin_client_secret" class="form-control" value="<?= htmlspecialchars($settings['linkedin_client_secret'] ?? '') ?>" placeholder="Client Secret">
                 </div>
-                <div class=\"col-12\">
-                  <label class=\"form-label small fw-semibold\">LinkedIn Access Token</label>
-                  <div class=\"input-group\">
-                    <input type=\"password\" id=\"liTokenInput\" name=\"linkedin_access_token\" class=\"form-control font-monospace\" value=\"<?= htmlspecialchars($settings['linkedin_access_token'] ?? '') ?>\" placeholder=\"AQV...\">
-                    <button class=\"btn btn-outline-primary\" type=\"button\" id=\"testLiTokenBtn\">
-                      <i class=\"bi bi-broadcast me-1\"></i> Test Connection
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">LinkedIn Access Token</label>
+                  <div class="input-group">
+                    <input type="password" id="liTokenInput" name="linkedin_access_token" class="form-control font-monospace" value="<?= htmlspecialchars($settings['linkedin_access_token'] ?? '') ?>" placeholder="AQV...">
+                    <button class="btn btn-outline-primary" type="button" id="testLiTokenBtn">
+                      <i class="bi bi-broadcast me-1"></i> Test Connection
                     </button>
                   </div>
-                  <div id=\"testLiFeedback\" class=\"small mt-2\" style=\"display: none;\"></div>
+                  <div id="testLiFeedback" class="small mt-2" style="display: none;"></div>
                 </div>
               </div>
 

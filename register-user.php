@@ -150,7 +150,7 @@ if ($stmt->fetch()) {
 
 /*
 |--------------------------------------------------------------------------
-| HASH PASSWORD
+| HASH PASSWORD & VERIFICATION TOKEN
 |--------------------------------------------------------------------------
 */
 
@@ -159,6 +159,9 @@ $passwordHash =
         $password,
         PASSWORD_DEFAULT
     );
+
+$verificationToken = bin2hex(random_bytes(32));
+$verificationExpires = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
 
 /*
@@ -175,7 +178,9 @@ $stmt = $pdo->prepare("
         email,
         password_hash,
         auth_provider,
-        status
+        status,
+        email_verification_token,
+        email_verification_expires_at
 
     )
 
@@ -185,7 +190,9 @@ $stmt = $pdo->prepare("
         ?,
         ?,
         'email',
-        'active'
+        'active',
+        ?,
+        ?
 
     )
 
@@ -198,7 +205,11 @@ $stmt->execute([
 
     $email,
 
-    $passwordHash
+    $passwordHash,
+
+    $verificationToken,
+
+    $verificationExpires
 
 ]);
 
@@ -213,35 +224,18 @@ $userId =
     $pdo->lastInsertId();
 
 
-/*
-|--------------------------------------------------------------------------
-| CREATE SESSION
-|--------------------------------------------------------------------------
-*/
-
-session_regenerate_id(true);
-
-
-$_SESSION['user_id'] =
-    $userId;
-
-$_SESSION['user_name'] =
-    $name;
-
-$_SESSION['user_email'] =
-    $email;
-
-$_SESSION['profile_picture'] =
-    null;
-
-$_SESSION['auth_provider'] =
-    "email";
 try {
     $wsService = new WorkspaceService($pdo);
-    $newWsId = $wsService->createWorkspace((int)$userId, $name . "'s Workspace", "Primary workspace");
-    $_SESSION['current_workspace_id'] = $newWsId;
+    $wsService->createWorkspace((int)$userId, $name . "'s Workspace", "Primary workspace");
 } catch (Throwable $e) {
     error_log("Failed to auto-create workspace for user {$userId}: " . $e->getMessage());
+}
+
+try {
+    require_once __DIR__ . '/services/MailService.php';
+    MailService::sendVerificationEmail($email, $name, $verificationToken);
+} catch (Throwable $e) {
+    error_log("Failed to send verification email: " . $e->getMessage());
 }
 
 
@@ -257,7 +251,7 @@ echo json_encode([
     "success" => true,
 
     "message" =>
-        "Account created successfully."
+        "Account created successfully! Please check your email to verify your account."
 
 ]);
 

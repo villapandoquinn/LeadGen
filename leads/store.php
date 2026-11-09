@@ -26,6 +26,7 @@ $website = trim($_POST['website'] ?? '');
 $industry = trim($_POST['industry'] ?? '');
 $location = trim($_POST['location'] ?? '');
 $campaignId = !empty($_POST['campaign_id']) ? (int)$_POST['campaign_id'] : null;
+$assignedTo = !empty($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : null;
 $score = max(0, min(100, (int)($_POST['score'] ?? 50)));
 $notes = trim($_POST['notes'] ?? '');
 
@@ -46,10 +47,10 @@ if ($campaignId) {
 
 try {
     $stmt = $pdo->prepare("
-        INSERT INTO leads (workspace_id, name, company, email, phone, website, industry, location, campaign_id, score, notes, status, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', 'manual')
+        INSERT INTO leads (workspace_id, name, company, email, phone, website, industry, location, campaign_id, assigned_to, score, notes, status, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', 'manual')
     ");
-    $stmt->execute([$currentWorkspaceId, $name, $company, $email, $phone, $website, $industry, $location, $campaignId, $score, $notes]);
+    $stmt->execute([$currentWorkspaceId, $name, $company, $email, $phone, $website, $industry, $location, $campaignId, $assignedTo, $score, $notes]);
 
     if ($campaignId) {
         $pdo->prepare("UPDATE campaigns SET total_leads = total_leads + 1 WHERE id = ? AND workspace_id = ?")->execute([$campaignId, $currentWorkspaceId]);

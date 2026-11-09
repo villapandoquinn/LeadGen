@@ -11,9 +11,38 @@ $usage = $billingService->getUsageStats($currentWorkspaceId);
 $history = $billingService->getPaymentHistory($currentWorkspaceId);
 
 $currentPlanId = (int)($sub['plan_id'] ?? 1);
-$currentStatus = $sub['status'] ?? 'trial';
+$currentSlug = $sub['plan_slug'] ?? 'basic';
+$currentStatus = $sub['status'] ?? 'active';
 $currentCycle = $sub['billing_cycle'] ?? 'monthly';
-$canManageBilling = $workspaceService->hasPermission($workspaceRole, 'billing');
+$canManageBilling = $workspaceService->hasPermission($workspaceRole, 'billing') || ($workspaceRole === 'owner');
+
+$upgradeMsg = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'request_upgrade') {
+    require_csrf();
+    $targetPlanId = (int)($_POST['target_plan_id'] ?? 2);
+    $res = $billingService->submitUpgradeRequest($currentWorkspaceId, $currentPlanId, $targetPlanId, $userId);
+    $upgradeMsg = $res['message'];
+}
+
+$adminMsg = '';
+if ($canManageBilling && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'admin_update_sub') {
+    require_csrf();
+    $newPlanId = (int)($_POST['plan_id'] ?? 1);
+    $prodActDate = trim($_POST['production_activated_at'] ?? date('Y-m-d'));
+    $incEnds = date('Y-m-d H:i:s', strtotime($prodActDate . ' +3 months'));
+    
+    $upd = $pdo->prepare("UPDATE workspace_subscriptions SET plan_id = ?, production_activated_at = ?, included_ends_at = ? WHERE workspace_id = ?");
+    $upd->execute([$newPlanId, $prodActDate, $incEnds, $currentWorkspaceId]);
+    $adminMsg = "Subscription and activation schedule updated successfully.";
+    $sub = $billingService->getWorkspaceSubscription($currentWorkspaceId);
+}
+
+$totalPaid = 0.00;
+foreach ($history as $h) {
+    if ($h['status'] === 'successful') {
+        $totalPaid += (float)$h['amount'];
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
