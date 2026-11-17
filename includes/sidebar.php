@@ -70,6 +70,11 @@ $activePage = $activePage ?? 'dashboard';
         <span>Lead Discovery</span>
       </a>
 
+      <a class="nav-item <?= $activePage === 'linkedin-sync' ? 'active' : '' ?>" href="<?= $appRoot ?>/linkedin/index.php">
+        <i class="bi bi-linkedin"></i>
+        <span>LinkedIn Lead Sync</span>
+      </a>
+
       <a class="nav-item <?= $activePage === 'leads' ? 'active' : '' ?>" href="<?= $appRoot ?>/leads/index.php">
         <i class="bi bi-person"></i>
         <span>Leads</span>

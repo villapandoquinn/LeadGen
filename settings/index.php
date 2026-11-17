@@ -116,9 +116,18 @@ $isSuccess = isset($_GET['success']);
               </div>
 
               <h3 class="h6 fw-bold mb-3 border-bottom pb-2 mt-4" id="linkedin-api">
-                <i class="bi bi-linkedin text-primary me-1"></i> LinkedIn Lead Generation API Integration
+                <i class="bi bi-linkedin text-primary me-1"></i> LinkedIn Lead Sync API Integration
               </h3>
               <div class="row g-3 mb-4">
+                <div class="col-12">
+                  <div class="alert alert-info py-2 small mb-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Configure your LinkedIn application credentials to enable OAuth 2.0 Lead Sync.
+                    Required scopes: <code>r_ads</code> <code>r_ads_leadgen_automation</code> <code>r_basicprofile</code>.
+                    API Version: <strong>202509</strong> (Lead Sync API).
+                    <a href="../linkedin/index.php" class="alert-link ms-1">Go to LinkedIn Lead Sync &rarr;</a>
+                  </div>
+                </div>
                 <div class="col-md-6">
                   <label class="form-label small fw-semibold">LinkedIn Client ID</label>
                   <input type="text" name="linkedin_client_id" class="form-control" value="<?= htmlspecialchars($settings['linkedin_client_id'] ?? '') ?>" placeholder="Client ID">
@@ -128,7 +137,12 @@ $isSuccess = isset($_GET['success']);
                   <input type="password" name="linkedin_client_secret" class="form-control" value="<?= htmlspecialchars($settings['linkedin_client_secret'] ?? '') ?>" placeholder="Client Secret">
                 </div>
                 <div class="col-12">
-                  <label class="form-label small fw-semibold">LinkedIn Access Token</label>
+                  <label class="form-label small fw-semibold">OAuth Redirect URI <span class="text-muted">(must match your LinkedIn app settings)</span></label>
+                  <input type="url" name="linkedin_redirect_uri" class="form-control font-monospace" value="<?= htmlspecialchars($settings['linkedin_redirect_uri'] ?? '') ?>" placeholder="https://yourdomain.com/linkedin/oauth-callback.php">
+                  <div class="small text-muted mt-1"><i class="bi bi-shield-lock me-1"></i>Set this exact URL in your LinkedIn App's <strong>Authorized Redirect URLs</strong>. Example: <code>http://localhost/LeadGen/linkedin/oauth-callback.php</code></div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">LinkedIn Access Token <span class="text-muted">(set automatically via OAuth — or paste manually)</span></label>
                   <div class="input-group">
                     <input type="password" id="liTokenInput" name="linkedin_access_token" class="form-control font-monospace" value="<?= htmlspecialchars($settings['linkedin_access_token'] ?? '') ?>" placeholder="AQV...">
                     <button class="btn btn-outline-primary" type="button" id="testLiTokenBtn">
@@ -137,6 +151,23 @@ $isSuccess = isset($_GET['success']);
                   </div>
                   <div id="testLiFeedback" class="small mt-2" style="display: none;"></div>
                 </div>
+                <?php if (!empty($settings['linkedin_access_token'])): ?>
+                <div class="col-12">
+                  <div class="alert alert-success py-2 small mb-0">
+                    <i class="bi bi-check-circle me-1"></i> LinkedIn access token is configured.
+                    <?php if (!empty($settings['linkedin_connected_at'])): ?>
+                      Connected: <strong><?= htmlspecialchars($settings['linkedin_connected_at']) ?></strong>.
+                    <?php endif; ?>
+                    <a href="../linkedin/index.php" class="alert-link ms-1">Open LinkedIn Lead Sync &rarr;</a>
+                  </div>
+                </div>
+                <?php else: ?>
+                <div class="col-12">
+                  <a href="../linkedin/index.php" class="btn btn-sm btn-outline-primary" style="border-color:#0077B5;color:#0077B5;">
+                    <i class="bi bi-linkedin me-1"></i> Connect LinkedIn via OAuth
+                  </a>
+                </div>
+                <?php endif; ?>
               </div>
 
 

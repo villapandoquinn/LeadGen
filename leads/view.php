@@ -145,6 +145,26 @@ $activePage = 'leads';
                 <div class="small mt-1"><span class="place-id-pill"><?= htmlspecialchars($lead['google_place_id']) ?></span></div>
               </div>
             <?php endif; ?>
+            <?php if ($lead['source'] === 'linkedin' || !empty($lead['linkedin_submission_id'])): ?>
+              <div class="border-top pt-3 mb-3">
+                <div class="text-primary small fw-bold mb-2"><i class="bi bi-linkedin me-1"></i> LinkedIn Lead Gen Details</div>
+                <?php if (!empty($lead['linkedin_job_title'])): ?>
+                  <div class="mb-2"><span class="text-muted small">Job Title:</span> <span class="small fw-semibold"><?= htmlspecialchars($lead['linkedin_job_title']) ?></span></div>
+                <?php endif; ?>
+                <?php if (!empty($lead['linkedin_submission_id'])): ?>
+                  <div class="mb-2"><span class="text-muted small">Submission ID:</span> <code class="small"><?= htmlspecialchars($lead['linkedin_submission_id']) ?></code></div>
+                <?php endif; ?>
+                <?php if (!empty($lead['linkedin_form_id'])): ?>
+                  <div class="mb-2"><span class="text-muted small">Lead Form ID:</span> <code class="small"><?= htmlspecialchars($lead['linkedin_form_id']) ?></code></div>
+                <?php endif; ?>
+                <?php if (!empty($lead['linkedin_campaign_id'])): ?>
+                  <div class="mb-2"><span class="text-muted small">Campaign ID:</span> <code class="small"><?= htmlspecialchars($lead['linkedin_campaign_id']) ?></code></div>
+                <?php endif; ?>
+                <?php if (!empty($lead['linkedin_submitted_at'])): ?>
+                  <div class="mb-2"><span class="text-muted small">Submitted On:</span> <span class="small"><?= htmlspecialchars($lead['linkedin_submitted_at']) ?></span></div>
+                <?php endif; ?>
+              </div>
+            <?php endif; ?>
             <?php if (!empty($lead['notes'])): ?>
               <div class="border-top pt-3"><div class="text-muted small">Notes</div><p class="small text-secondary mb-0 mt-1"><?= nl2br(htmlspecialchars($lead['notes'])) ?></p></div>
             <?php endif; ?>
