@@ -39,6 +39,12 @@ $employeeSource = $employeeCount !== null ? trim($_POST['employee_count_source']
 $source = trim($_POST['source'] ?? 'google');
 $score = (int)($_POST['score'] ?? 85);
 $campaignId = !empty($_POST['campaign_id']) ? (int)$_POST['campaign_id'] : null;
+$linkedinSubmissionId = trim($_POST['linkedin_submission_id'] ?? '');
+$linkedinFormId       = trim($_POST['linkedin_form_id'] ?? '');
+$linkedinCampaignId   = trim($_POST['linkedin_campaign_id'] ?? '');
+$linkedinAccountId    = trim($_POST['linkedin_account_id'] ?? '');
+$linkedinJobTitle     = trim($_POST['linkedin_job_title'] ?? '');
+
 
 if (empty($company)) {
     echo json_encode(['success' => false, 'message' => 'Business / company name is required.']);
@@ -55,6 +61,16 @@ if ($campaignId) {
 }
 
 try {
+    // 0. Check duplicate by LinkedIn submission ID within current workspace
+    if (!empty($linkedinSubmissionId)) {
+        $liStmt = $pdo->prepare("SELECT id FROM leads WHERE workspace_id = ? AND linkedin_submission_id = ? LIMIT 1");
+        $liStmt->execute([$currentWorkspaceId, $linkedinSubmissionId]);
+        if ($liStmt->fetch()) {
+            echo json_encode(['success' => false, 'message' => 'This LinkedIn lead submission has already been imported into this workspace.']);
+            exit;
+        }
+    }
+
     // 1. Check duplicate by place_id within current workspace
     if (!empty($placeId)) {
         $cStmt = $pdo->prepare("SELECT id FROM leads WHERE workspace_id = ? AND google_place_id = ? LIMIT 1");
@@ -87,8 +103,13 @@ try {
 
     // Insert lead scoped to current workspace
     $stmt = $pdo->prepare("
-        INSERT INTO leads (workspace_id, google_place_id, campaign_id, name, company, email, phone, website, industry, location, address, source, status, score, rating, reviews_count, employee_count, employee_count_source, employee_count_verified_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, " . ($employeeCount !== null ? "NOW()" : "NULL") . ")
+        INSERT INTO leads (
+            workspace_id, google_place_id, campaign_id, name, company, email, phone, website,
+            industry, location, address, source, status, score, rating, reviews_count,
+            employee_count, employee_count_source, employee_count_verified_at,
+            linkedin_submission_id, linkedin_form_id, linkedin_campaign_id, linkedin_account_id, linkedin_job_title
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, " . ($employeeCount !== null ? "NOW()" : "NULL") . ", ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $currentWorkspaceId,
@@ -107,7 +128,12 @@ try {
         $rating,
         $reviewsCount,
         $employeeCount,
-        $employeeSource
+        $employeeSource,
+        !empty($linkedinSubmissionId) ? $linkedinSubmissionId : null,
+        !empty($linkedinFormId) ? $linkedinFormId : null,
+        !empty($linkedinCampaignId) ? $linkedinCampaignId : null,
+        !empty($linkedinAccountId) ? $linkedinAccountId : null,
+        !empty($linkedinJobTitle) ? $linkedinJobTitle : null
     ]);
     $leadId = $pdo->lastInsertId();
 

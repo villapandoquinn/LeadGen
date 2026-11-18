@@ -92,6 +92,8 @@ class LinkedInLeadService {
         return [
             'is_configured' => $this->isConfigured(),
             'is_connected'  => $this->isConnected(),
+            'configured'    => $this->isConfigured(),
+            'connected'     => $this->isConnected(),
             'is_expired'    => $this->isTokenExpired(),
             'has_token'     => !empty($this->accessToken),
             'connected_at'  => $s['linkedin_connected_at'] ?? null,
