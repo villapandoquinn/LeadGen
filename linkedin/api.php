@@ -19,17 +19,48 @@ switch ($action) {
     case 'get_status':
         echo json_encode(['success'=>true,'status'=>$connSts]); break;
     case 'get_accounts':
-        $r=$service->getAdAccounts();
-        if (!$r['success']) { echo json_encode(['success'=>false,'message'=>$r['message']]); break; }
-        $a=array_map(fn($x)=>['id'=>$x['id']??'','name'=>$x['name']??'Account','status'=>$x['status']??''],$r['data']['elements']??[]);
-        echo json_encode(['success'=>true,'accounts'=>$a]); break;
+        $r = $service->getAdAccounts();
+        if (!$r['success']) {
+            echo json_encode(['success' => false, 'message' => $r['message']]);
+            break;
+        }
+        $a = [];
+        foreach ($r['data']['elements'] ?? [] as $x) {
+            $id = (string)($x['id'] ?? '');
+            if (!$id && !empty($x['account'])) {
+                $id = preg_replace('/^urn:li:sponsoredAccount:/', '', $x['account']);
+            }
+            $name = $x['name'] ?? ('Account #' . $id);
+            if ($id) {
+                $a[] = ['id' => $id, 'name' => $name, 'status' => $x['status'] ?? 'ACTIVE'];
+            }
+        }
+        echo json_encode(['success' => true, 'accounts' => $a]);
+        break;
     case 'get_forms':
-        $aid=trim($_POST['account_id']??'');
-        if (!$aid){echo json_encode(['success'=>false,'message'=>'Account ID required.']);break;}
-        $r=$service->getLeadForms($aid);
-        if (!$r['success']){echo json_encode(['success'=>false,'message'=>$r['message']]);break;}
-        $f=array_map(fn($x)=>['id'=>$x['id']??'','name'=>$x['name']??'Form'],$r['data']['elements']??[]);
-        echo json_encode(['success'=>true,'forms'=>$f]); break;
+        $aid = trim($_POST['account_id'] ?? '');
+        if (!$aid) {
+            echo json_encode(['success' => false, 'message' => 'Account ID required.']);
+            break;
+        }
+        $r = $service->getLeadForms($aid);
+        if (!$r['success']) {
+            echo json_encode(['success' => false, 'message' => $r['message']]);
+            break;
+        }
+        $f = [];
+        foreach ($r['data']['elements'] ?? [] as $x) {
+            $fid = (string)($x['id'] ?? '');
+            if (!$fid && !empty($x['form'])) {
+                $fid = preg_replace('/^urn:li:leadForm:|^urn:li:adForm:/', '', $x['form']);
+            }
+            $fname = $x['name'] ?? ('Form #' . $fid);
+            if ($fid) {
+                $f[] = ['id' => $fid, 'name' => $fname];
+            }
+        }
+        echo json_encode(['success' => true, 'forms' => $f]);
+        break;
     case 'sync_leads':
         if (!$workspaceService->hasPermission($workspaceRole,'manage_leads')){echo json_encode(['success'=>false,'message'=>'No permission to import leads.']);break;}
         if (!$billingService->checkQuota($currentWorkspaceId,'leads')){echo json_encode(['success'=>false,'message'=>'Lead quota reached. Upgrade plan.']);break;}

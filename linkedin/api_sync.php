@@ -3,8 +3,9 @@
  * linkedin/api_sync.php -- Sync leads handler (included by api.php for sync_leads action)
  * GET /rest/leadFormSubmissions -- r_ads_leadgen_automation -- LinkedIn-Version: 202509
  */
-$aid  = trim($_POST['account_id'] ?? '');
-$fid  = trim($_POST['form_id']    ?? '') ?: null;
+$aid  = preg_replace('/^urn:li:sponsoredAccount:/', '', trim($_POST['account_id'] ?? ''));
+$fid  = trim($_POST['form_id'] ?? '') ?: null;
+if ($fid) $fid = preg_replace('/^urn:li:leadForm:|^urn:li:adForm:/', '', $fid);
 $cid  = !empty($_POST['campaign_id']) ? (int)$_POST['campaign_id'] : null;
 $mode = trim($_POST['sync_mode']  ?? 'incremental');
 if (!$aid) { echo json_encode(['success'=>false,'message'=>'LinkedIn Account ID required.']); return; }

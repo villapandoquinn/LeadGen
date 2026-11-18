@@ -17,7 +17,7 @@
  */
 class LinkedInLeadService {
     const API_BASE        = 'https://api.linkedin.com';
-    const API_VERSION     = '202509';
+    const API_VERSION     = '202601';
     const OAUTH_BASE      = 'https://www.linkedin.com/oauth/v2';
     const REQUIRED_SCOPES = ['r_ads', 'r_ads_leadgen_automation', 'r_basicprofile'];
 
@@ -158,27 +158,40 @@ class LinkedInLeadService {
     }
 
 
-    /** Authenticated GET with LinkedIn-Version: 202509 header */
-    private function apiGet(string $endpoint, array $params = [], bool $retry = false): array {
+    /** Authenticated GET with LinkedIn-Version header & active version fallback */
+    private function apiGet(string $endpoint, array $params = [], bool $retry = false, ?string $versionOverride = null): array {
         if ($this->isTokenExpired() && !empty($this->refreshToken) && !$retry) {
             if (!$this->refreshAccessToken()) return ['success'=>false,'http_code'=>401,'message'=>'LinkedIn token expired. Reconnect.','data'=>null];
         }
         if (empty($this->accessToken)) return ['success'=>false,'http_code'=>401,'message'=>'No LinkedIn access token. Connect your account.','data'=>null];
+        
+        $apiVersion = $versionOverride ?: self::API_VERSION;
         $url = self::API_BASE . $endpoint . (!empty($params) ? '?' . http_build_query($params) : '');
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $this->accessToken,
-                'LinkedIn-Version: ' . self::API_VERSION,
+                'LinkedIn-Version: ' . $apiVersion,
                 'X-Restli-Protocol-Version: 2.0.0',
                 'Content-Type: application/json',
             ],
             CURLOPT_TIMEOUT => 20, CURLOPT_SSL_VERIFYPEER => false,
         ]);
-        $resp = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch); curl_close($ch);
+        $resp = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch);
         if ($err) { error_log('[LinkedIn] cURL: '.$err); return ['success'=>false,'http_code'=>0,'message'=>'Network error connecting to LinkedIn.','data'=>null]; }
         $data = json_decode($resp, true);
+
+        // Fallback for HTTP 426 (Requested version is not active)
+        if ($code === 426 && !$retry) {
+            $activeCandidates = ['202601', '202602', '202603', '202604', '202605', '202606', '202607', '202608', '202609', '202610', '202611'];
+            foreach ($activeCandidates as $candidate) {
+                if ($candidate === $apiVersion) continue;
+                $res = $this->apiGet($endpoint, $params, true, $candidate);
+                if ($res['success'] || $res['http_code'] !== 426) return $res;
+            }
+        }
+
         if ($code === 401 && !$retry && !empty($this->refreshToken) && $this->refreshAccessToken()) return $this->apiGet($endpoint,$params,true);
         if ($code === 401) return ['success'=>false,'http_code'=>401,'message'=>'LinkedIn auth expired. Reconnect your account.','data'=>null];
         if ($code === 403) return ['success'=>false,'http_code'=>403,'message'=>'Insufficient LinkedIn permissions. Ensure r_ads + r_ads_leadgen_automation scopes approved.','data'=>null];
@@ -198,27 +211,64 @@ class LinkedInLeadService {
         return ['success'=>false,'message'=>'LinkedIn not yet authorized. Complete the OAuth flow.'];
     }
 
-    /** /rest/adAccounts FINDER -- r_ads -- v202509 */
+    /** /rest/adAccounts FINDER -- r_ads */
     public function getAdAccounts(): array {
-        return $this->apiGet('/rest/adAccounts',['q'=>'search','search.type.values[0]'=>'BUSINESS','search.status.values[0]'=>'ACTIVE']);
+        return $this->apiGet('/rest/adAccounts', ['q' => 'search']);
     }
-    /** /rest/adAccounts/{id}/adCampaigns BATCH_GET -- r_ads -- v202509 */
+
+    /** /rest/adAccounts/{id}/adCampaigns */
     public function getAdCampaigns(string $id): array {
-        return $this->apiGet('/rest/adAccounts/'.$id.'/adCampaigns',['q'=>'search','search.status.values[0]'=>'ACTIVE']);
+        $acctClean = preg_replace('/^urn:li:sponsoredAccount:/', '', trim($id));
+        return $this->apiGet('/rest/adAccounts/' . $acctClean . '/adCampaigns', ['q' => 'search']);
     }
-    /** /rest/adForms -- r_ads_leadgen_automation -- v202509 */
+
+    /** /rest/leadForms FINDER -- r_ads_leadgen_automation */
     public function getLeadForms(string $id): array {
-        return $this->apiGet('/rest/adForms',['q'=>'account','account'=>'urn:li:sponsoredAccount:'.$id]);
+        $acctClean = preg_replace('/^urn:li:sponsoredAccount:/', '', trim($id));
+        $res = $this->apiGet('/rest/leadForms', [
+            'q'     => 'owner',
+            'owner' => '(sponsoredAccount:urn:li:sponsoredAccount:' . $acctClean . ')'
+        ]);
+        if ($res['success']) return $res;
+        return $this->apiGet('/rest/adForms', [
+            'q'       => 'account',
+            'account' => 'urn:li:sponsoredAccount:' . $acctClean
+        ]);
     }
+
     /**
-     * GET /rest/leadFormSubmissions -- PRIMARY Lead Sync endpoint
-     * Scope: r_ads_leadgen_automation | LinkedIn-Version: 202509
+     * GET /rest/leadFormResponses -- Primary Lead Sync endpoint
+     * Scope: r_ads_leadgen_automation
      */
-    public function getLeadFormSubmissions(string $acctId, ?string $formId=null, ?int $startMs=null, int $count=100, int $start=0): array {
-        $p = ['q'=>'owner','owner'=>'urn:li:sponsoredAccount:'.$acctId,'count'=>min($count,100),'start'=>$start];
-        if ($formId)  $p['form']                = 'urn:li:adForm:'.$formId;
-        if ($startMs) $p['submissionStartedAt'] = $startMs;
-        return $this->apiGet('/rest/leadFormSubmissions', $p);
+    public function getLeadFormSubmissions(string $acctId, ?string $formId = null, ?int $startMs = null, int $count = 100, int $start = 0): array {
+        $acctClean = preg_replace('/^urn:li:sponsoredAccount:/', '', trim($acctId));
+        $p = [
+            'q'        => 'owner',
+            'owner'    => '(sponsoredAccount:urn:li:sponsoredAccount:' . $acctClean . ')',
+            'leadType' => '(leadType:SPONSORED)',
+            'count'    => min($count, 100),
+            'start'    => $start
+        ];
+        if ($formId) {
+            $formClean = preg_replace('/^urn:li:leadForm:|^urn:li:adForm:/', '', trim($formId));
+            $p['leadForms'] = 'List(urn:li:leadForm:' . $formClean . ')';
+        }
+        if ($startMs) {
+            $p['submissionStartedAt'] = $startMs;
+        }
+        $res = $this->apiGet('/rest/leadFormResponses', $p);
+        if ($res['success']) return $res;
+
+        // Fallback to legacy leadFormSubmissions
+        $p2 = [
+            'q'     => 'owner',
+            'owner' => 'urn:li:sponsoredAccount:' . $acctClean,
+            'count' => min($count, 100),
+            'start' => $start
+        ];
+        if ($formId) $p2['form'] = 'urn:li:adForm:' . preg_replace('/^urn:li:leadForm:|^urn:li:adForm:/', '', trim($formId));
+        if ($startMs) $p2['submissionStartedAt'] = $startMs;
+        return $this->apiGet('/rest/leadFormSubmissions', $p2);
     }
 
     public function syncLeads(string $acctId, ?string $formId=null, ?int $lastTs=null): array {
@@ -241,19 +291,41 @@ class LinkedInLeadService {
 
     private function mapSubmissionToLead(array $sub, string $acctId): array {
         $ans = [];
-        foreach ($sub['formResponse']['answers'] ?? [] as $a) {
-            $qt = strtoupper($a['questionType'] ?? '');
-            $v  = trim($a['answerDetails']['textAnswer'] ?? '');
-            if ($qt && $v) $ans[$qt] = $v;
+        if (!empty($sub['formResponse']['answers'])) {
+            foreach ($sub['formResponse']['answers'] as $a) {
+                $qt = strtoupper($a['questionType'] ?? '');
+                $v  = trim($a['answerDetails']['textAnswer'] ?? ($a['textValue'] ?? ''));
+                if ($qt && $v) $ans[$qt] = $v;
+            }
         }
+        if (!empty($sub['formSubmission']['questionsAndAnswers'])) {
+            foreach ($sub['formSubmission']['questionsAndAnswers'] as $qa) {
+                $name = strtoupper($qa['predefinedQuestion']['name'] ?? ($qa['questionType'] ?? ''));
+                $v    = trim($qa['textValue'] ?? ($qa['answerDetails']['textAnswer'] ?? ''));
+                if ($name && $v) $ans[$name] = $v;
+            }
+        }
+        if (!empty($sub['answers'])) {
+            foreach ($sub['answers'] as $a) {
+                $qt = strtoupper($a['questionType'] ?? ($a['name'] ?? ''));
+                $v  = trim($a['value'] ?? ($a['textAnswer'] ?? ''));
+                if ($qt && $v) $ans[$qt] = $v;
+            }
+        }
+
         $first = $ans['FIRST_NAME'] ?? '';
         $last  = $ans['LAST_NAME']  ?? '';
-        $full  = trim("$first $last") ?: ($ans['FULL_NAME'] ?? '');
-        $email = $ans['EMAIL'] ?? ($ans['WORK_EMAIL'] ?? '');
-        $phone = $ans['PHONE'] ?? ($ans['PHONE_NUMBER'] ?? '');
+        $full  = trim("$first $last") ?: ($ans['FULL_NAME'] ?? ($ans['NAME'] ?? ''));
+        $email = $ans['EMAIL'] ?? ($ans['WORK_EMAIL'] ?? ($ans['EMAIL_ADDRESS'] ?? ''));
+        $phone = $ans['PHONE'] ?? ($ans['PHONE_NUMBER'] ?? ($ans['WORK_PHONE'] ?? ''));
         $co    = $ans['COMPANY'] ?? ($ans['COMPANY_NAME'] ?? '');
         $title = $ans['JOB_TITLE'] ?? ($ans['TITLE'] ?? '');
         $subMs = $sub['submittedAt'] ?? (time() * 1000);
+        $subId = $sub['id'] ?? ($sub['submissionUrn'] ?? ('urn:li:lead:' . uniqid()));
+        $formId = ltrim($sub['form'] ?? ($sub['formUrn'] ?? ($sub['leadForm'] ?? '')), 'urn:li:adForm:');
+        $formId = ltrim($formId, 'urn:li:leadForm:');
+        $campId = ltrim($sub['campaign'] ?? ($sub['campaignUrn'] ?? ($sub['sponsoredCampaign'] ?? '')), 'urn:li:sponsoredCampaign:');
+
         return [
             // Maps to existing leads table columns
             'name'     => $full ?: ($co ?: 'LinkedIn Lead'),
@@ -261,15 +333,14 @@ class LinkedInLeadService {
             'email'    => !empty($email) ? strtolower(trim($email)) : null,
             'phone'    => $phone,
             'industry' => $ans['INDUSTRY'] ?? '',
-            'location' => $ans['LOCATION'] ?? '',
+            'location' => $ans['LOCATION'] ?? ($ans['CITY'] ?? ''),
             'website'  => $ans['WEBSITE']  ?? '',
             'source'   => 'linkedin',
             'score'    => 80,
-            'notes'    => $title ? 'Job Title: ' . $title : '',
-            // LinkedIn-specific identifiers (require migration columns)
-            'linkedin_submission_id' => $sub['id'] ?? '',
-            'linkedin_form_id'       => ltrim($sub['form']     ?? '', 'urn:li:adForm:'),
-            'linkedin_campaign_id'   => ltrim($sub['campaign'] ?? '', 'urn:li:sponsoredCampaign:'),
+            'notes'    => $title ? 'Job Title: ' . $title : 'LinkedIn Lead Submission',
+            'linkedin_submission_id' => $subId,
+            'linkedin_form_id'       => $formId ?: null,
+            'linkedin_campaign_id'   => $campId ?: null,
             'linkedin_account_id'    => $acctId,
             'linkedin_first_name'    => $first,
             'linkedin_last_name'     => $last,
