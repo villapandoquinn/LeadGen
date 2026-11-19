@@ -85,6 +85,10 @@ $workspaces = $workspaceService->getUserWorkspaces($userId);
                     <span>Members:</span>
                     <strong class="text-dark"><?= (int)$w['member_count'] ?> active</strong>
                   </div>
+                  <div class="d-flex justify-content-between mb-1 text-muted">
+                    <span>Created By:</span>
+                    <strong class="text-dark"><?= htmlspecialchars($w['creator_name'] ?: 'System / Admin') ?></strong>
+                  </div>
                   <div class="d-flex justify-content-between text-muted">
                     <span>Created:</span>
                     <span><?= date('M d, Y', strtotime($w['created_at'])) ?></span>

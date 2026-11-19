@@ -12,9 +12,11 @@ class WorkspaceService {
     public function getUserWorkspaces(int $userId): array {
         $stmt = $this->pdo->prepare("
             SELECT w.*, wm.role as member_role,
+                   u.name as creator_name, u.email as creator_email,
                    (SELECT COUNT(*) FROM workspace_members WHERE workspace_id = w.id AND status = 'active') as member_count
             FROM workspaces w
             JOIN workspace_members wm ON w.id = wm.workspace_id
+            LEFT JOIN users u ON w.owner_id = u.id
             WHERE wm.user_id = ? AND wm.status = 'active' AND w.status != 'archived'
             ORDER BY (w.id = 1) DESC, w.name ASC
         ");
