@@ -17,13 +17,13 @@
     "smtp_host": "smtp.sendgrid.net",
     "smtp_port": 587,
     "google_maps_api_key": "AIzaSyCjhVgMLeF_HuLtMLpJqstAibDRwtP6KTQ",
-    "updated_at": "2026-11-09 11:56:37",
+    "updated_at": "2026-11-18 18:29:58",
     "sender_email": "support@primovative.com",
     "smtp_encryption": "TLS",
     "smtp_username": "",
     "smtp_password": "",
-    "linkedin_client_id": "",
-    "linkedin_client_secret": "",
-    "linkedin_redirect_uri": "",
-    "linkedin_access_token": ""
+    "linkedin_client_id": "86s1wzzgtw8fwz",
+    "linkedin_client_secret": "WPL_AP1.yReQg1H8IOfeMvOb.y6gpxA==",
+    "linkedin_redirect_uri": "http:\/\/localhost\/LeadGen\/linkedin\/oauth-callback.php",
+    "linkedin_access_token": "AQVXaAHJ2AMNMAHXeyFb7D6eAgsixIRW2mrn1OjrPlhd--ULrTNmX6tZNYtlkeKE7u5LWXdW1PjXEtZneNiE_WtYhjqDxThUBUb5PhVXfweRuPrnwZP0mq7jVHOQB0aTDl_kuGDWb1Kjx4T_EhzGKoeiMlRInN2q61c2Qg7P3wD4c-dFwYcRauEVDMVlL1TIyjyc1QK6AmS6SawcYwQZimozp1wpG7aY0j5vYcxOjj_i-OH1rPb7DnLItmXwWWjuTJGI5NRXu0P6-ZwMEiAlb_sxSnHph32KlDxDthRMAQSajyEbFNVq4kGeg7fW5RA9w32qAE4eUuNCvbpAt6Sv2zEtkDzflg"
 }
